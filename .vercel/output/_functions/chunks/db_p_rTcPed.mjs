@@ -3,10 +3,9 @@ import { Redis } from '@upstash/redis';
 let redis = null;
 function getRedis() {
   if (!redis) {
-    redis = new Redis({
-      url: "https://precious-mite-78226.upstash.io",
-      token: "gQAAAAAAATGSAAIgcDJmMzRjMjczN2I3YWY0ZWI3ODk0ODVjY2NlM2UxMzEwMw"
-    });
+    const url = process.env.UPSTASH_REDIS_REST_URL || "https://precious-mite-78226.upstash.io";
+    const token = process.env.UPSTASH_REDIS_REST_TOKEN || "gQAAAAAAATGSAAIgcDJmMzRjMjczN2I3YWY0ZWI3ODk0ODVjY2NlM2UxMzEwMw";
+    redis = new Redis({ url, token });
   }
   return redis;
 }

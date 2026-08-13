@@ -9,7 +9,8 @@ export function verifyAdmin(request: Request): boolean {
   const decoded = atob(encoded);
   const [, password] = decoded.split(":");
 
-  return password === import.meta.env.ADMIN_PASSWORD;
+  const adminPw = process.env.ADMIN_PASSWORD || import.meta.env.ADMIN_PASSWORD;
+  return password === adminPw;
 }
 
 export function unauthorizedResponse(): Response {

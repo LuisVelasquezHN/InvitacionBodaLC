@@ -21,10 +21,12 @@ let redis: Redis | null = null;
 
 export function getRedis(): Redis {
   if (!redis) {
-    redis = new Redis({
-      url: import.meta.env.UPSTASH_REDIS_REST_URL,
-      token: import.meta.env.UPSTASH_REDIS_REST_TOKEN,
-    });
+    const url = process.env.UPSTASH_REDIS_REST_URL || import.meta.env.UPSTASH_REDIS_REST_URL;
+    const token = process.env.UPSTASH_REDIS_REST_TOKEN || import.meta.env.UPSTASH_REDIS_REST_TOKEN;
+    if (!url || !token) {
+      throw new Error("Missing UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN");
+    }
+    redis = new Redis({ url, token });
   }
   return redis;
 }

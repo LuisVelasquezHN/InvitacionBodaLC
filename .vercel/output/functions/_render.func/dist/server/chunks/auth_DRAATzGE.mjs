@@ -6,7 +6,8 @@ function verifyAdmin(request) {
   const encoded = authHeader.slice(6);
   const decoded = atob(encoded);
   const [, password] = decoded.split(":");
-  return password === "a123456b";
+  const adminPw = process.env.ADMIN_PASSWORD || "a123456b";
+  return password === adminPw;
 }
 function unauthorizedResponse() {
   return new Response(JSON.stringify({ error: "No autorizado" }), {
