@@ -1,4 +1,4 @@
-import { g as getAllGuests, c as createGuest, u as updateGuest, d as deleteGuest } from '../../../chunks/db_a4tckmNf.mjs';
+import { g as getAllGuests, c as createGuest, u as updateGuest, d as deleteGuest } from '../../../chunks/db_CUtYugI-.mjs';
 import { v as verifyAdmin, u as unauthorizedResponse } from '../../../chunks/auth_rkdQyNb2.mjs';
 export { renderers } from '../../../renderers.mjs';
 
@@ -16,19 +16,23 @@ const POST = async ({ request }) => {
   if (!verifyAdmin(request)) return unauthorizedResponse();
   try {
     const body = await request.json();
-    const { nombre, maxPases, slug, pareja, categoria } = body;
-    if (!nombre || !slug) {
+    const { personas, slug, categoria } = body;
+    if (!personas || !Array.isArray(personas) || personas.length === 0 || !slug) {
       return new Response(
-        JSON.stringify({ error: "Nombre y slug son requeridos." }),
+        JSON.stringify({ error: "Se requiere al menos una persona y un slug." }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+    if (personas.length > 2) {
+      return new Response(
+        JSON.stringify({ error: "Máximo 2 personas por invitación." }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
     const result = await createGuest({
       slug: slug.toLowerCase().replace(/[^a-z0-9-]/g, ""),
-      nombre,
-      pareja: pareja || "",
+      personas: personas.filter((p) => p.trim()).map((p) => p.trim()),
       categoria: categoria || "ambos",
-      maxPases: maxPases || 1,
       confirmado: false,
       cantidadConfirmada: null,
       mensaje: "",
@@ -42,12 +46,12 @@ const POST = async ({ request }) => {
       );
     }
     return new Response(
-      JSON.stringify({ message: "Invitado creado correctamente." }),
+      JSON.stringify({ message: "Invitación creada correctamente." }),
       { status: 201, headers: { "Content-Type": "application/json" } }
     );
   } catch {
     return new Response(
-      JSON.stringify({ error: "Error al crear invitado." }),
+      JSON.stringify({ error: "Error al crear invitación." }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
@@ -71,7 +75,7 @@ const PUT = async ({ request }) => {
       );
     }
     return new Response(
-      JSON.stringify({ message: "Invitado actualizado." }),
+      JSON.stringify({ message: "Invitación actualizada." }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch {
@@ -94,7 +98,7 @@ const DELETE = async ({ request }) => {
     }
     await deleteGuest(slug);
     return new Response(
-      JSON.stringify({ message: "Invitado eliminado." }),
+      JSON.stringify({ message: "Invitación eliminada." }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch {

@@ -21,21 +21,26 @@ export const POST: APIRoute = async ({ request }) => {
 
   try {
     const body = await request.json();
-    const { nombre, maxPases, slug, pareja, categoria } = body;
+    const { personas, slug, categoria } = body;
 
-    if (!nombre || !slug) {
+    if (!personas || !Array.isArray(personas) || personas.length === 0 || !slug) {
       return new Response(
-        JSON.stringify({ error: "Nombre y slug son requeridos." }),
+        JSON.stringify({ error: "Se requiere al menos una persona y un slug." }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    if (personas.length > 2) {
+      return new Response(
+        JSON.stringify({ error: "Máximo 2 personas por invitación." }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
     const result = await createGuest({
       slug: slug.toLowerCase().replace(/[^a-z0-9-]/g, ""),
-      nombre,
-      pareja: pareja || "",
+      personas: personas.filter((p: string) => p.trim()).map((p: string) => p.trim()),
       categoria: categoria || "ambos",
-      maxPases: maxPases || 1,
       confirmado: false,
       cantidadConfirmada: null,
       mensaje: "",
@@ -51,12 +56,12 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     return new Response(
-      JSON.stringify({ message: "Invitado creado correctamente." }),
+      JSON.stringify({ message: "Invitación creada correctamente." }),
       { status: 201, headers: { "Content-Type": "application/json" } }
     );
   } catch {
     return new Response(
-      JSON.stringify({ error: "Error al crear invitado." }),
+      JSON.stringify({ error: "Error al crear invitación." }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
@@ -85,7 +90,7 @@ export const PUT: APIRoute = async ({ request }) => {
     }
 
     return new Response(
-      JSON.stringify({ message: "Invitado actualizado." }),
+      JSON.stringify({ message: "Invitación actualizada." }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch {
@@ -112,7 +117,7 @@ export const DELETE: APIRoute = async ({ request }) => {
 
     await deleteGuest(slug);
     return new Response(
-      JSON.stringify({ message: "Invitado eliminado." }),
+      JSON.stringify({ message: "Invitación eliminada." }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch {

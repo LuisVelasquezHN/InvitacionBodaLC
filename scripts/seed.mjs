@@ -1,19 +1,17 @@
 /**
- * Script de seed para poblar Upstash Redis con los invitados.
+ * Script de seed para poblar Upstash Redis con las invitaciones.
  * 
  * Uso:
  *   UPSTASH_REDIS_REST_URL=... UPSTASH_REDIS_REST_TOKEN=... node scripts/seed.mjs
- * 
- * O con archivo .env:
- *   npm run seed (requiere dotenv instalado o cargar .env manualmente)
+ *   O con .env: npm run seed
+ *   Para sobreescribir: npm run seed -- --force
  */
 
 import { Redis } from "@upstash/redis";
-
-// Cargar .env si existe
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
+// Cargar .env
 try {
   const envPath = resolve(process.cwd(), ".env");
   const envContent = readFileSync(envPath, "utf-8");
@@ -23,147 +21,125 @@ try {
       process.env[key.trim()] = val.join("=").trim();
     }
   });
-} catch {
-  // .env file not found, use existing env vars
-}
+} catch { /* no .env */ }
 
 const UPSTASH_REDIS_REST_URL = process.env.UPSTASH_REDIS_REST_URL;
 const UPSTASH_REDIS_REST_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
 
 if (!UPSTASH_REDIS_REST_URL || !UPSTASH_REDIS_REST_TOKEN) {
-  console.error("❌ Faltan las variables UPSTASH_REDIS_REST_URL y UPSTASH_REDIS_REST_TOKEN");
-  console.error("   Configúralas en .env o como variables de entorno.");
+  console.error("❌ Faltan UPSTASH_REDIS_REST_URL y UPSTASH_REDIS_REST_TOKEN");
   process.exit(1);
 }
 
-const redis = new Redis({
-  url: UPSTASH_REDIS_REST_URL,
-  token: UPSTASH_REDIS_REST_TOKEN,
-});
+const redis = new Redis({ url: UPSTASH_REDIS_REST_URL, token: UPSTASH_REDIS_REST_TOKEN });
 
-function generateSlug(nombre) {
-  return nombre
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
+function generateSlug(name) {
+  return name
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/[^a-z0-9\s-]/g, "").trim().replace(/\s+/g, "-").replace(/-+/g, "-");
 }
 
-// Lista de invitados original
-// maxPases: 2 = invitación de pareja, 1 = individual
-// categoria: "luis" | "cesia" | "ambos" (familia compartida / novios)
-// pareja: nombre de la persona con quien comparte invitación (vacío si individual)
-const invitados = [
-  { nombre: "Luis Velásquez", maxPases: 1, categoria: "ambos", pareja: "" },
-  { nombre: "Cesia Mejía", maxPases: 1, categoria: "ambos", pareja: "" },
-  { nombre: "Jesica Guerrero", maxPases: 2, categoria: "cesia", pareja: "Oscar Bonilla" },
-  { nombre: "Wendy Bonilla", maxPases: 2, categoria: "cesia", pareja: "" },
-  { nombre: "Oscar Bonilla", maxPases: 2, categoria: "cesia", pareja: "Jesica Guerrero" },
-  { nombre: "Jorge Mejía", maxPases: 2, categoria: "cesia", pareja: "" },
-  { nombre: "Valeria Bonilla", maxPases: 1, categoria: "cesia", pareja: "" },
-  { nombre: "Abuelo Rubén", maxPases: 2, categoria: "cesia", pareja: "" },
-  { nombre: "Eda Elvir", maxPases: 2, categoria: "cesia", pareja: "" },
-  { nombre: "Alexis", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Martha Osortho", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Hilda", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Martha Alvarez", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Pamela", maxPases: 2, categoria: "cesia", pareja: "" },
-  { nombre: "Claudia Bernardez", maxPases: 2, categoria: "cesia", pareja: "" },
-  { nombre: "Valerie", maxPases: 1, categoria: "cesia", pareja: "" },
-  { nombre: "Jacobo Bonilla", maxPases: 2, categoria: "cesia", pareja: "" },
-  { nombre: "Irene", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Gabriela", maxPases: 1, categoria: "cesia", pareja: "" },
-  { nombre: "Gabriela Mendoza", maxPases: 2, categoria: "cesia", pareja: "" },
-  { nombre: "Katherine Elvir", maxPases: 2, categoria: "cesia", pareja: "" },
-  { nombre: "Norman", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Hector Estrada", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Rigo", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Luis Navarro", maxPases: 2, categoria: "luis", pareja: "Jennifer Garcia" },
-  { nombre: "Suyapa", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Jennifer Garcia", maxPases: 2, categoria: "luis", pareja: "Luis Navarro" },
-  { nombre: "Javier", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Gabriel Bonilla", maxPases: 2, categoria: "cesia", pareja: "" },
-  { nombre: "Juan", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Julissa", maxPases: 2, categoria: "cesia", pareja: "" },
-  { nombre: "Magda", maxPases: 2, categoria: "cesia", pareja: "" },
-  { nombre: "Emerson Banegas", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Rubén", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Osman", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Lesly", maxPases: 2, categoria: "cesia", pareja: "" },
-  { nombre: "Samuel Castejon", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Juan primo", maxPases: 2, categoria: "cesia", pareja: "" },
-  { nombre: "Yesenia Munguia", maxPases: 2, categoria: "cesia", pareja: "" },
-  { nombre: "Norma", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "José Lagos", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Mario Cardona", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Juan Carballo", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Javiersito", maxPases: 1, categoria: "luis", pareja: "" },
-  { nombre: "Emerita Elvir", maxPases: 2, categoria: "cesia", pareja: "" },
-  { nombre: "Fabricio", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Javier Pacheco", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Andrea", maxPases: 2, categoria: "luis", pareja: "Esposo Andrea" },
-  { nombre: "Kathia", maxPases: 2, categoria: "cesia", pareja: "" },
-  { nombre: "Esposo Andrea", maxPases: 1, categoria: "luis", pareja: "Andrea" },
-  { nombre: "Lizeth Pacheco", maxPases: 2, categoria: "luis", pareja: "Jorge Esposo Lizeth" },
-  { nombre: "Tío Edgardo", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Genesis", maxPases: 1, categoria: "cesia", pareja: "" },
-  { nombre: "Tía Rumilda", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Fernando Lopez", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Sara", maxPases: 2, categoria: "cesia", pareja: "" },
-  { nombre: "Sindy Proudinat", maxPases: 2, categoria: "cesia", pareja: "" },
-  { nombre: "Daniel", maxPases: 2, categoria: "luis", pareja: "" },
-  { nombre: "Jorge Esposo Lizeth", maxPases: 1, categoria: "luis", pareja: "Lizeth Pacheco" },
-  { nombre: "Josman Proudinat", maxPases: 2, categoria: "cesia", pareja: "" },
+// ============================================================
+// INVITACIONES
+// Cada entrada es UNA invitación con 1 o 2 personas.
+// El slug se genera del primer nombre.
+// categoria: quién los invita
+// ============================================================
+const invitaciones = [
+  // === AMBOS (novios/familia directa) ===
+  { personas: ["Luis Velásquez"], categoria: "ambos" },
+  { personas: ["Cesia Mejía"], categoria: "ambos" },
+
+  // === CESIA ===
+  { personas: ["Jesica Guerrero", "Oscar Bonilla"], categoria: "cesia" },
+  { personas: ["Wendy Bonilla"], categoria: "cesia" },
+  { personas: ["Jorge Mejía"], categoria: "cesia" },
+  { personas: ["Valeria Bonilla"], categoria: "cesia" },
+  { personas: ["Abuelo Rubén"], categoria: "cesia" },
+  { personas: ["Eda Elvir"], categoria: "cesia" },
+  { personas: ["Pamela"], categoria: "cesia" },
+  { personas: ["Claudia Bernardez"], categoria: "cesia" },
+  { personas: ["Valerie"], categoria: "cesia" },
+  { personas: ["Jacobo Bonilla"], categoria: "cesia" },
+  { personas: ["Gabriela"], categoria: "cesia" },
+  { personas: ["Gabriela Mendoza"], categoria: "cesia" },
+  { personas: ["Katherine Elvir"], categoria: "cesia" },
+  { personas: ["Gabriel Bonilla"], categoria: "cesia" },
+  { personas: ["Julissa"], categoria: "cesia" },
+  { personas: ["Magda"], categoria: "cesia" },
+  { personas: ["Lesly"], categoria: "cesia" },
+  { personas: ["Juan primo"], categoria: "cesia" },
+  { personas: ["Yesenia Munguia"], categoria: "cesia" },
+  { personas: ["Emerita Elvir"], categoria: "cesia" },
+  { personas: ["Kathia"], categoria: "cesia" },
+  { personas: ["Genesis"], categoria: "cesia" },
+  { personas: ["Sara"], categoria: "cesia" },
+  { personas: ["Sindy Proudinat"], categoria: "cesia" },
+  { personas: ["Josman Proudinat"], categoria: "cesia" },
+
+  // === LUIS ===
+  { personas: ["Alexis"], categoria: "luis" },
+  { personas: ["Martha Osortho"], categoria: "luis" },
+  { personas: ["Hilda"], categoria: "luis" },
+  { personas: ["Martha Alvarez"], categoria: "luis" },
+  { personas: ["Irene"], categoria: "luis" },
+  { personas: ["Norman"], categoria: "luis" },
+  { personas: ["Hector Estrada"], categoria: "luis" },
+  { personas: ["Rigo"], categoria: "luis" },
+  { personas: ["Luis Navarro", "Jennifer Garcia"], categoria: "luis" },
+  { personas: ["Suyapa"], categoria: "luis" },
+  { personas: ["Javier"], categoria: "luis" },
+  { personas: ["Juan"], categoria: "luis" },
+  { personas: ["Emerson Banegas"], categoria: "luis" },
+  { personas: ["Rubén"], categoria: "luis" },
+  { personas: ["Osman"], categoria: "luis" },
+  { personas: ["Samuel Castejon"], categoria: "luis" },
+  { personas: ["Norma"], categoria: "luis" },
+  { personas: ["José Lagos"], categoria: "luis" },
+  { personas: ["Mario Cardona"], categoria: "luis" },
+  { personas: ["Juan Carballo"], categoria: "luis" },
+  { personas: ["Javiersito"], categoria: "luis" },
+  { personas: ["Fabricio"], categoria: "luis" },
+  { personas: ["Javier Pacheco"], categoria: "luis" },
+  { personas: ["Andrea", "Esposo Andrea"], categoria: "luis" },
+  { personas: ["Lizeth Pacheco", "Jorge Esposo Lizeth"], categoria: "luis" },
+  { personas: ["Tío Edgardo"], categoria: "luis" },
+  { personas: ["Tía Rumilda"], categoria: "luis" },
+  { personas: ["Fernando Lopez"], categoria: "luis" },
+  { personas: ["Daniel"], categoria: "luis" },
 ];
 
 async function seed() {
-  console.log("🌱 Iniciando seed de invitados...\n");
+  console.log("🌱 Iniciando seed de invitaciones...\n");
 
-  // Verificar si ya hay datos
+  // Check existing
   const existingSlugs = await redis.smembers("guests:index");
   if (existingSlugs && existingSlugs.length > 0) {
-    const answer = process.argv.includes("--force");
-    if (!answer) {
-      console.log(`⚠️  Ya existen ${existingSlugs.length} invitados en la base de datos.`);
+    if (!process.argv.includes("--force")) {
+      console.log(`⚠️  Ya existen ${existingSlugs.length} invitaciones.`);
       console.log("   Usa --force para sobreescribir.\n");
-      
-      console.log("Invitados existentes:");
-      existingSlugs.forEach(s => console.log(`  • ${s}`));
       process.exit(0);
     }
-
-    // Limpiar datos existentes
     console.log("🗑️  Limpiando datos existentes...");
     const pipeline = redis.pipeline();
-    for (const slug of existingSlugs) {
-      pipeline.del(`guest:${slug}`);
-    }
+    for (const slug of existingSlugs) pipeline.del(`guest:${slug}`);
     pipeline.del("guests:index");
     await pipeline.exec();
-    console.log("   ✓ Datos anteriores eliminados.\n");
+    console.log("   ✓ Limpio.\n");
   }
 
-  // Generar slugs únicos
+  // Generate slugs and build data
   const slugMap = new Map();
-  const guests = invitados.map((inv, index) => {
-    let slug = generateSlug(inv.nombre);
-    
-    // Manejar duplicados de slug
-    if (slugMap.has(slug)) {
-      slug = `${slug}-${index}`;
-    }
+  const guests = invitaciones.map((inv, index) => {
+    let slug = generateSlug(inv.personas[0]);
+    if (slugMap.has(slug)) slug = `${slug}-${index}`;
     slugMap.set(slug, true);
 
     return {
       id: index + 1,
       slug,
-      nombre: inv.nombre,
-      pareja: inv.pareja || "",
-      categoria: inv.categoria || "ambos",
-      maxPases: inv.maxPases,
+      personas: inv.personas,
+      categoria: inv.categoria,
       confirmado: false,
       cantidadConfirmada: null,
       mensaje: "",
@@ -172,9 +148,8 @@ async function seed() {
     };
   });
 
-  // Subir a Redis
-  console.log(`📤 Subiendo ${guests.length} invitados a Redis...\n`);
-  
+  // Upload
+  console.log(`📤 Subiendo ${guests.length} invitaciones...\n`);
   const pipeline = redis.pipeline();
   for (const guest of guests) {
     pipeline.set(`guest:${guest.slug}`, JSON.stringify(guest));
@@ -182,24 +157,26 @@ async function seed() {
   }
   await pipeline.exec();
 
-  // Resumen
-  console.log("✅ Seed completado exitosamente!\n");
+  // Summary
+  const totalPersonas = guests.reduce((s, g) => s + g.personas.length, 0);
+  const parejas = guests.filter(g => g.personas.length === 2).length;
+  const individuales = guests.filter(g => g.personas.length === 1).length;
+  const deLuis = guests.filter(g => g.categoria === "luis");
+  const deCesia = guests.filter(g => g.categoria === "cesia");
+
+  console.log("✅ Seed completado!\n");
   console.log("📊 Resumen:");
   console.log(`   • Total invitaciones: ${guests.length}`);
-  console.log(`   • Individuales (1 pase): ${guests.filter(g => g.maxPases === 1).length}`);
-  console.log(`   • Parejas (2 pases): ${guests.filter(g => g.maxPases === 2).length}`);
-  console.log(`   • Capacidad máxima: ${guests.reduce((sum, g) => sum + g.maxPases, 0)} personas`);
-  console.log(`   • Invitados de Luis: ${guests.filter(g => g.categoria === "luis").length}`);
-  console.log(`   • Invitados de Cesia: ${guests.filter(g => g.categoria === "cesia").length}`);
-  console.log(`   • Compartidos (ambos): ${guests.filter(g => g.categoria === "ambos").length}`);
-  console.log(`   • Parejas vinculadas: ${guests.filter(g => g.pareja).length / 2}`);
-  console.log("\n📋 Links generados:");
+  console.log(`   • Total personas: ${totalPersonas}`);
+  console.log(`   • Individuales: ${individuales}`);
+  console.log(`   • Parejas: ${parejas}`);
+  console.log(`   • Invitados Luis: ${deLuis.reduce((s,g)=>s+g.personas.length,0)} personas (${deLuis.length} invitaciones)`);
+  console.log(`   • Invitados Cesia: ${deCesia.reduce((s,g)=>s+g.personas.length,0)} personas (${deCesia.length} invitaciones)`);
+  console.log("\n📋 Links:");
   guests.forEach((g) => {
-    console.log(`   ${g.nombre.padEnd(25)} → /invitacion/${g.slug}  [${g.maxPases} pases]`);
+    const names = g.personas.join(" & ");
+    console.log(`   ${names.padEnd(35)} → /invitacion/${g.slug}  [${g.personas.length}p]`);
   });
 }
 
-seed().catch((err) => {
-  console.error("❌ Error durante el seed:", err);
-  process.exit(1);
-});
+seed().catch((err) => { console.error("❌ Error:", err); process.exit(1); });

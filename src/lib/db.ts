@@ -1,23 +1,20 @@
 import { Redis } from "@upstash/redis";
 
-// Modelo de datos:
-// KV Structure:
-//   guest:{slug}  → GuestData (hash stored as JSON)
-//   guests:index  → Set of all slugs
-//   admin:password → hashed admin password
+// Modelo de datos simplificado:
+// Una "Invitación" tiene un array de personas (1 o 2 nombres).
+// personas.length = cantidad de pases de esa invitación.
+// No hay duplicados. Una pareja es UN registro con 2 nombres.
 
-export interface GuestData {
+export interface InvitationData {
   id: number;
   slug: string;
-  nombre: string;
-  pareja: string; // nombre de la pareja (vacío si es individual)
-  categoria: "luis" | "cesia" | "ambos"; // quién los invita
-  maxPases: number; // máximo de personas que puede traer
+  personas: string[]; // ["Luis Navarro"] o ["Luis Navarro", "Jennifer Garcia"]
+  categoria: "luis" | "cesia" | "ambos";
   confirmado: boolean;
-  cantidadConfirmada: number | null; // cuántos confirmaron
+  cantidadConfirmada: number | null; // cuántos de las personas asisten
   mensaje: string;
   fechaConfirmacion: string | null;
-  activo: boolean; // si la invitación está activa (para reasignaciones)
+  activo: boolean;
 }
 
 let redis: Redis | null = null;
@@ -32,13 +29,13 @@ export function getRedis(): Redis {
   return redis;
 }
 
-export async function getGuest(slug: string): Promise<GuestData | null> {
+export async function getGuest(slug: string): Promise<InvitationData | null> {
   const db = getRedis();
-  const data = await db.get<GuestData>(`guest:${slug}`);
+  const data = await db.get<InvitationData>(`guest:${slug}`);
   return data;
 }
 
-export async function getAllGuests(): Promise<GuestData[]> {
+export async function getAllGuests(): Promise<InvitationData[]> {
   const db = getRedis();
   const slugs = await db.smembers("guests:index");
   if (!slugs || slugs.length === 0) return [];
@@ -47,8 +44,8 @@ export async function getAllGuests(): Promise<GuestData[]> {
   for (const slug of slugs) {
     pipeline.get(`guest:${slug}`);
   }
-  const results = await pipeline.exec<(GuestData | null)[]>();
-  return results.filter((g): g is GuestData => g !== null);
+  const results = await pipeline.exec<(InvitationData | null)[]>();
+  return results.filter((g): g is InvitationData => g !== null);
 }
 
 export async function confirmGuest(
@@ -71,11 +68,11 @@ export async function confirmGuest(
     return { success: false, error: "Ya has confirmado tu asistencia previamente." };
   }
 
-  if (cantidad > guest.maxPases || cantidad < 1) {
-    return { success: false, error: `Solo puedes confirmar entre 1 y ${guest.maxPases} personas.` };
+  if (cantidad > guest.personas.length || cantidad < 1) {
+    return { success: false, error: `Solo puedes confirmar entre 1 y ${guest.personas.length} personas.` };
   }
 
-  const updated: GuestData = {
+  const updated: InvitationData = {
     ...guest,
     confirmado: true,
     cantidadConfirmada: cantidad,
@@ -106,7 +103,7 @@ export async function declineGuest(
     return { success: false, error: "Ya has confirmado tu asistencia previamente." };
   }
 
-  const updated: GuestData = {
+  const updated: InvitationData = {
     ...guest,
     confirmado: true,
     cantidadConfirmada: 0,
@@ -121,7 +118,7 @@ export async function declineGuest(
 // Admin functions
 export async function updateGuest(
   slug: string,
-  updates: Partial<Pick<GuestData, "nombre" | "pareja" | "categoria" | "maxPases" | "activo" | "confirmado" | "cantidadConfirmada" | "mensaje">>
+  updates: Partial<Pick<InvitationData, "personas" | "categoria" | "activo" | "confirmado" | "cantidadConfirmada" | "mensaje">>
 ): Promise<{ success: boolean; error?: string }> {
   const db = getRedis();
   const guest = await getGuest(slug);
@@ -130,9 +127,9 @@ export async function updateGuest(
     return { success: false, error: "Invitado no encontrado." };
   }
 
-  // Si se reactiva o des-confirma, resetear campos de confirmación
-  const updated: GuestData = { ...guest, ...updates };
+  const updated: InvitationData = { ...guest, ...updates };
 
+  // Si se des-confirma, resetear campos
   if (updates.confirmado === false) {
     updated.cantidadConfirmada = null;
     updated.fechaConfirmacion = null;
@@ -142,19 +139,18 @@ export async function updateGuest(
   return { success: true };
 }
 
-export async function createGuest(data: Omit<GuestData, "id">): Promise<{ success: boolean; error?: string }> {
+export async function createGuest(data: Omit<InvitationData, "id">): Promise<{ success: boolean; error?: string }> {
   const db = getRedis();
   const existing = await getGuest(data.slug);
 
   if (existing) {
-    return { success: false, error: "Ya existe un invitado con ese slug." };
+    return { success: false, error: "Ya existe una invitación con ese slug." };
   }
 
-  // Get next ID
   const allGuests = await getAllGuests();
   const maxId = allGuests.reduce((max, g) => Math.max(max, g.id), 0);
 
-  const guest: GuestData = {
+  const guest: InvitationData = {
     ...data,
     id: maxId + 1,
   };

@@ -38,8 +38,8 @@ async function confirmGuest(slug, cantidad, mensaje) {
   if (guest.confirmado) {
     return { success: false, error: "Ya has confirmado tu asistencia previamente." };
   }
-  if (cantidad > guest.maxPases || cantidad < 1) {
-    return { success: false, error: `Solo puedes confirmar entre 1 y ${guest.maxPases} personas.` };
+  if (cantidad > guest.personas.length || cantidad < 1) {
+    return { success: false, error: `Solo puedes confirmar entre 1 y ${guest.personas.length} personas.` };
   }
   const updated = {
     ...guest,
@@ -91,7 +91,7 @@ async function createGuest(data) {
   const db = getRedis();
   const existing = await getGuest(data.slug);
   if (existing) {
-    return { success: false, error: "Ya existe un invitado con ese slug." };
+    return { success: false, error: "Ya existe una invitación con ese slug." };
   }
   const allGuests = await getAllGuests();
   const maxId = allGuests.reduce((max, g) => Math.max(max, g.id), 0);
