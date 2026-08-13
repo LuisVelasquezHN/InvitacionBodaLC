@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <circle cx="64" cy="64" r="60" fill="#f9f7f1" stroke="#bfa37c" stroke-width="3"/>
-  <text x="64" y="72" font-family="serif" font-size="36" font-weight="bold" fill="#4a5d46" text-anchor="middle" letter-spacing="2">C&amp;L</text>
-  <path d="M34 90 Q64 100 94 90" fill="none" stroke="#8f9e8b" stroke-width="1.5" stroke-linecap="round"/>
-  <path d="M34 38 Q64 28 94 38" fill="none" stroke="#8f9e8b" stroke-width="1.5" stroke-linecap="round"/>
-</svg>

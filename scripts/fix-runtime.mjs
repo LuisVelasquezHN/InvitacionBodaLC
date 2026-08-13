@@ -7,7 +7,7 @@ const configPath = resolve('.vercel/output/functions/_render.func/.vc-config.jso
 
 try {
   const config = JSON.parse(readFileSync(configPath, 'utf-8'));
-  config.runtime = 'nodejs18.x';
+  config.runtime = 'nodejs20.x';
   writeFileSync(configPath, JSON.stringify(config, null, '\t'));
   console.log('✓ Fixed runtime to nodejs18.x');
 } catch (e) {
