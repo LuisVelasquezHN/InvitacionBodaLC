@@ -1,0 +1,47 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+export const prerender = true;
+---
+
+<Layout title="Página no encontrada — Boda C&L">
+  <main class="min-h-screen flex items-center justify-center bg-wedding-cream px-6">
+    <div class="text-center max-w-md">
+      <!-- Icono decorativo -->
+      <div class="mb-8">
+        <div class="w-20 h-20 mx-auto bg-wedding-sage/10 rounded-full flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-wedding-sage/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Texto -->
+      <h1 class="font-serif-elegant text-3xl md:text-4xl text-wedding-dark-green mb-3">
+        Página no encontrada
+      </h1>
+      <p class="font-body text-gray-500 text-sm leading-relaxed mb-8">
+        Parece que esta ruta no existe. Si recibiste un link de invitación, 
+        verifica que esté escrito correctamente.
+      </p>
+
+      <!-- Botón -->
+      <a
+        href="/"
+        class="inline-flex items-center gap-2 px-6 py-3 bg-wedding-dark-green text-white rounded-full font-serif-elegant text-sm uppercase tracking-wider shadow-md hover:bg-wedding-gold transition-all duration-300"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Volver al inicio
+      </a>
+
+      <!-- Decoración -->
+      <div class="mt-12 flex justify-center gap-2">
+        <div class="w-1 h-1 rounded-full bg-wedding-gold/30"></div>
+        <div class="w-1 h-1 rounded-full bg-wedding-sage/30"></div>
+        <div class="w-1 h-1 rounded-full bg-wedding-gold/30"></div>
+      </div>
+    </div>
+  </main>
+</Layout>

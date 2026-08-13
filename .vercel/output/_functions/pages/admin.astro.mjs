@@ -1,4 +1,4 @@
-import { e as createComponent, f as createAstro, r as renderTemplate, k as renderHead } from '../chunks/astro/server_BEX2D0My.mjs';
+import { e as createComponent, f as createAstro, r as renderTemplate, l as renderHead } from '../chunks/astro/server_Dt6Kf5jJ.mjs';
 import 'piccolore';
 import 'clsx';
 import { v as verifyAdmin } from '../chunks/auth_rkdQyNb2.mjs';
