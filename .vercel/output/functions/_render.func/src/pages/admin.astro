@@ -1,0 +1,496 @@
+---
+import { verifyAdmin } from "../lib/auth";
+
+export const prerender = false;
+
+const isAuthed = verifyAdmin(Astro.request);
+if (!isAuthed) {
+  return new Response("Acceso no autorizado", {
+    status: 401,
+    headers: { "WWW-Authenticate": 'Basic realm="Panel Admin"' },
+  });
+}
+---
+
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin · Boda C&L</title>
+  <script is:inline src="https://cdn.tailwindcss.com"></script>
+  <script is:inline src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script is:inline>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            brand: { 50: '#f0f5f0', 100: '#dce8dc', 200: '#b8d1b8', 300: '#8fb88f', 400: '#6a9e6a', 500: '#4a7d4a', 600: '#3b633b', 700: '#2d4a2d', 800: '#1f331f', 900: '#111c11' },
+            gold: { 50: '#fdf8ee', 100: '#f9edcc', 200: '#f2d999', 300: '#e8c162', 400: '#c4a265', 500: '#a78642', 600: '#8a6c2e', 700: '#6d5323', 800: '#503c1a', 900: '#332610' },
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-50 font-sans text-gray-900 antialiased">
+
+  <div class="flex h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-brand-800 text-white transform -translate-x-full lg:translate-x-0 lg:static lg:inset-0 transition-transform duration-300 flex flex-col">
+      <!-- Brand -->
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+        <div class="w-9 h-9 rounded-lg bg-gold-400 flex items-center justify-center text-brand-900 font-bold text-sm shadow-lg shadow-gold-400/20">C&L</div>
+        <div>
+          <p class="font-semibold text-sm leading-tight">Boda Admin</p>
+          <p class="text-[11px] text-white/40">Panel de gestión</p>
+        </div>
+      </div>
+
+      <!-- Nav -->
+      <nav class="flex-1 p-3 space-y-0.5">
+        <button data-view="dashboard" class="nav-btn active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/8 transition-all">
+          <i data-lucide="layout-dashboard" class="w-[18px] h-[18px]"></i>Dashboard
+        </button>
+        <button data-view="guests" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/8 transition-all">
+          <i data-lucide="users" class="w-[18px] h-[18px]"></i>Invitados
+        </button>
+        <button data-view="links" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/8 transition-all">
+          <i data-lucide="send" class="w-[18px] h-[18px]"></i>Links
+        </button>
+      </nav>
+
+      <!-- Bottom -->
+      <div class="p-3 border-t border-white/10">
+        <button id="btn-export" class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs text-white/60 border border-white/10 hover:bg-white/8 hover:text-white transition-all">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i>Exportar CSV
+        </button>
+      </div>
+    </aside>
+
+    <!-- Overlay mobile -->
+    <div id="overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
+
+    <!-- Main -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <!-- Header -->
+      <header class="h-16 bg-white border-b border-gray-200 px-4 lg:px-6 flex items-center justify-between shrink-0 sticky top-0 z-30">
+        <div class="flex items-center gap-3">
+          <button id="menu-btn" class="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-50 transition">
+            <i data-lucide="menu" class="w-4 h-4 text-gray-600"></i>
+          </button>
+          <div>
+            <h1 id="page-title" class="text-sm font-semibold">Dashboard</h1>
+            <p id="page-sub" class="text-xs text-gray-400"></p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btn-refresh" class="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-50 transition" title="Refrescar">
+            <i data-lucide="refresh-cw" class="w-4 h-4 text-gray-500"></i>
+          </button>
+          <button id="btn-add" class="flex items-center gap-1.5 px-3.5 py-2 bg-brand-700 hover:bg-brand-600 text-white text-xs font-medium rounded-lg shadow-sm transition">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Nuevo invitado</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <main class="flex-1 overflow-y-auto p-4 lg:p-6 space-y-0">
+
+        <!-- VIEW: Dashboard -->
+        <section id="v-dashboard" class="view space-y-5">
+          <div id="stats-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4"></div>
+          <div class="grid lg:grid-cols-5 gap-4">
+            <div class="lg:col-span-3 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                <i data-lucide="activity" class="w-4 h-4 text-gray-400"></i>
+                <h3 class="text-sm font-semibold">Actividad reciente</h3>
+              </div>
+              <div id="recent-list" class="divide-y divide-gray-50"></div>
+            </div>
+            <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                <i data-lucide="bar-chart-3" class="w-4 h-4 text-gray-400"></i>
+                <h3 class="text-sm font-semibold">Resumen</h3>
+              </div>
+              <div id="summary-list" class="divide-y divide-gray-50"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW: Guests -->
+        <section id="v-guests" class="view hidden">
+          <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <!-- Header -->
+            <div class="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center gap-3">
+              <div class="flex items-center gap-2 flex-1">
+                <i data-lucide="users" class="w-4 h-4 text-gray-400"></i>
+                <h3 class="text-sm font-semibold">Invitados</h3>
+                <span id="guest-count" class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full"></span>
+              </div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <div class="relative">
+                  <i data-lucide="search" class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none"></i>
+                  <input id="search-input" type="text" placeholder="Buscar..." class="pl-8 pr-3 py-1.5 w-44 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-400 transition" />
+                </div>
+                <div class="flex bg-gray-100 rounded-lg p-0.5 text-xs">
+                  <button data-filter="all" class="ftab px-2.5 py-1 rounded-md font-medium transition text-gray-500 bg-white shadow-sm">Todos</button>
+                  <button data-filter="confirmed" class="ftab px-2.5 py-1 rounded-md font-medium transition text-gray-400 hover:text-gray-600">Sí</button>
+                  <button data-filter="pending" class="ftab px-2.5 py-1 rounded-md font-medium transition text-gray-400 hover:text-gray-600">Pend.</button>
+                  <button data-filter="declined" class="ftab px-2.5 py-1 rounded-md font-medium transition text-gray-400 hover:text-gray-600">No</button>
+                </div>
+                <div class="flex bg-gray-100 rounded-lg p-0.5 text-xs">
+                  <button data-cat="all" class="ctab px-2.5 py-1 rounded-md font-medium transition text-gray-500 bg-white shadow-sm">Todos</button>
+                  <button data-cat="luis" class="ctab px-2.5 py-1 rounded-md font-medium transition text-gray-400 hover:text-gray-600">🤵 Luis</button>
+                  <button data-cat="cesia" class="ctab px-2.5 py-1 rounded-md font-medium transition text-gray-400 hover:text-gray-600">👰 Cesia</button>
+                  <button data-cat="ambos" class="ctab px-2.5 py-1 rounded-md font-medium transition text-gray-400 hover:text-gray-600">💍 Ambos</button>
+                </div>
+              </div>
+            </div>
+            <!-- Table -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-left min-w-[700px]">
+                <thead>
+                  <tr class="bg-gray-50/80">
+                    <th class="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Invitado</th>
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide text-center">Pases</th>
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide text-center">Estado</th>
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide text-center">Asisten</th>
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Mensaje</th>
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide text-center">Activo</th>
+                    <th class="px-4 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody id="guests-tbody" class="divide-y divide-gray-100"></tbody>
+              </table>
+            </div>
+            <div id="guests-empty" class="hidden text-center py-12 text-gray-400 text-sm">
+              <i data-lucide="inbox" class="w-10 h-10 mx-auto mb-3 opacity-40"></i>
+              <p>No se encontraron invitados</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW: Links -->
+        <section id="v-links" class="view hidden">
+          <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i data-lucide="send" class="w-4 h-4 text-gray-400"></i>
+                <h3 class="text-sm font-semibold">Links de invitación</h3>
+              </div>
+              <button id="btn-copy-all" class="flex items-center gap-1.5 px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-500 transition">
+                <i data-lucide="copy" class="w-3 h-3"></i>Copiar todos
+              </button>
+            </div>
+            <div id="links-list" class="divide-y divide-gray-100"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="fixed inset-0 z-[60] flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+    <div class="modal-panel relative bg-white rounded-2xl w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-200">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <h2 id="modal-title" class="text-base font-semibold">Nuevo invitado</h2>
+        <button id="modal-x" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition text-gray-400">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <form id="form-guest" class="p-6 space-y-5">
+        <input type="hidden" id="f-edit" />
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">Nombre completo</label>
+          <input type="text" id="f-name" required class="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-400 transition" placeholder="Ej: María García" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">Pareja <span class="text-gray-300">(dejar vacío si es individual)</span></label>
+          <input type="text" id="f-pareja" class="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-400 transition" placeholder="Nombre de la pareja" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">Slug (URL)</label>
+          <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-brand-200 focus-within:border-brand-400 transition">
+            <span class="px-3 py-2.5 text-xs text-gray-400 bg-gray-50 border-r border-gray-200 whitespace-nowrap">/invitacion/</span>
+            <input type="text" id="f-slug" required class="flex-1 px-3 py-2.5 text-sm border-0 focus:outline-none focus:ring-0" placeholder="maria-garcia" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-2">Categoría</label>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="cursor-pointer">
+              <input type="radio" name="categoria" value="luis" class="peer hidden" />
+              <div class="flex flex-col items-center gap-1 px-2 py-2.5 border-2 border-gray-200 rounded-xl text-gray-400 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 transition text-center">
+                <span class="text-base">🤵</span>
+                <span class="text-[10px] font-medium">Luis</span>
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="categoria" value="cesia" class="peer hidden" />
+              <div class="flex flex-col items-center gap-1 px-2 py-2.5 border-2 border-gray-200 rounded-xl text-gray-400 peer-checked:border-pink-500 peer-checked:bg-pink-50 peer-checked:text-pink-700 transition text-center">
+                <span class="text-base">👰</span>
+                <span class="text-[10px] font-medium">Cesia</span>
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="categoria" value="ambos" class="peer hidden" checked />
+              <div class="flex flex-col items-center gap-1 px-2 py-2.5 border-2 border-gray-200 rounded-xl text-gray-400 peer-checked:border-gold-500 peer-checked:bg-gold-50 peer-checked:text-gold-700 transition text-center">
+                <span class="text-base">💍</span>
+                <span class="text-[10px] font-medium">Ambos</span>
+              </div>
+            </label>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-2">Personas permitidas</label>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="cursor-pointer">
+              <input type="radio" name="pases" value="1" class="peer hidden" />
+              <div class="flex flex-col items-center gap-1 px-3 py-3 border-2 border-gray-200 rounded-xl text-gray-400 peer-checked:border-brand-500 peer-checked:bg-brand-50 peer-checked:text-brand-700 transition">
+                <i data-lucide="user" class="w-5 h-5"></i>
+                <span class="text-xs font-medium">1</span>
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="pases" value="2" class="peer hidden" checked />
+              <div class="flex flex-col items-center gap-1 px-3 py-3 border-2 border-gray-200 rounded-xl text-gray-400 peer-checked:border-brand-500 peer-checked:bg-brand-50 peer-checked:text-brand-700 transition">
+                <i data-lucide="users" class="w-5 h-5"></i>
+                <span class="text-xs font-medium">2</span>
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="pases" value="3" class="peer hidden" />
+              <div class="flex flex-col items-center gap-1 px-3 py-3 border-2 border-gray-200 rounded-xl text-gray-400 peer-checked:border-brand-500 peer-checked:bg-brand-50 peer-checked:text-brand-700 transition">
+                <i data-lucide="users" class="w-5 h-5"></i>
+                <span class="text-xs font-medium">3</span>
+              </div>
+            </label>
+          </div>
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button type="button" id="modal-cancel" class="flex-1 py-2.5 text-sm font-medium border border-gray-200 rounded-lg hover:bg-gray-50 transition">Cancelar</button>
+          <button type="submit" class="flex-1 py-2.5 text-sm font-medium bg-brand-700 hover:bg-brand-600 text-white rounded-lg shadow-sm transition">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toasts -->
+  <div id="toasts" class="fixed bottom-4 right-4 z-[70] flex flex-col gap-2 pointer-events-none"></div>
+
+  <style>
+    .nav-btn.active { background: rgba(255,255,255,0.12); color: white; font-weight: 500; }
+    .ftab.active, .ctab.active { background: white; color: #111; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    #modal.open { opacity: 1; pointer-events: all; }
+    #modal.open .modal-panel { transform: scale(1); }
+    .toast-enter { animation: toastIn 0.3s cubic-bezier(0.21,1.02,0.73,1) forwards; }
+    .toast-exit { animation: toastOut 0.25s ease forwards; }
+    @keyframes toastIn { from { opacity:0; transform: translateX(20px) scale(0.95); } to { opacity:1; transform: none; } }
+    @keyframes toastOut { to { opacity:0; transform: translateX(20px) scale(0.95); } }
+  </style>
+
+  <script is:inline>
+    let guests = [], filter = "all", catFilter = "all", pw = "";
+    const $ = s => document.querySelector(s);
+    const $$ = s => document.querySelectorAll(s);
+
+    function init() {
+      pw = sessionStorage.getItem("apw") || "";
+      if (!pw) { pw = prompt("Contraseña admin:") || ""; if (pw) sessionStorage.setItem("apw", pw); }
+      bind();
+      load();
+    }
+
+    function bind() {
+      $$(".nav-btn").forEach(b => b.addEventListener("click", () => nav(b.dataset.view)));
+      $("#menu-btn").addEventListener("click", () => { $("#sidebar").classList.remove("-translate-x-full"); $("#overlay").classList.remove("hidden"); });
+      $("#overlay").addEventListener("click", closeSb);
+      $("#btn-add").addEventListener("click", addModal);
+      $("#btn-refresh").addEventListener("click", () => { load(); notify("Actualizado","info"); });
+      $("#btn-export").addEventListener("click", csv);
+      $("#btn-copy-all").addEventListener("click", copyAll);
+      $("#modal-x").addEventListener("click", closeM);
+      $("#modal-cancel").addEventListener("click", closeM);
+      $("#modal").querySelector(".absolute").addEventListener("click", closeM);
+      $("#form-guest").addEventListener("submit", submit);
+      $("#f-name").addEventListener("input", () => { if(!$("#f-edit").value) $("#f-slug").value = slug($("#f-name").value); });
+      $("#search-input").addEventListener("input", renderGuests);
+      $$(".ftab").forEach(t => t.addEventListener("click", () => { $$(".ftab").forEach(x => x.classList.remove("active","bg-white","shadow-sm","text-gray-500")); t.classList.add("active","bg-white","shadow-sm","text-gray-500"); filter = t.dataset.filter; renderGuests(); }));
+      $$(".ctab").forEach(t => t.addEventListener("click", () => { $$(".ctab").forEach(x => x.classList.remove("active","bg-white","shadow-sm","text-gray-500")); t.classList.add("active","bg-white","shadow-sm","text-gray-500"); catFilter = t.dataset.cat; renderGuests(); }));
+      document.addEventListener("keydown", e => { if(e.key==="Escape") closeM(); });
+      document.addEventListener("click", delegate);
+    }
+
+    function delegate(e) {
+      const b = e.target.closest("[data-act]");
+      if (!b) return;
+      const { act, slug: s, name: n, active: a } = b.dataset;
+      if (act === "copy") copy(s, b);
+      else if (act === "edit") editModal(s);
+      else if (act === "reset") reset(s);
+      else if (act === "toggle") toggle(s, a === "true");
+      else if (act === "delete") del(s, n);
+    }
+
+    function closeSb() { $("#sidebar").classList.add("-translate-x-full"); $("#overlay").classList.add("hidden"); }
+    function nav(v) { $$(".view").forEach(x => x.classList.add("hidden")); $(`#v-${v}`).classList.remove("hidden"); $$(".nav-btn").forEach(x => x.classList.remove("active")); document.querySelector(`[data-view="${v}"]`).classList.add("active"); $("#page-title").textContent = {dashboard:"Dashboard",guests:"Invitados",links:"Links"}[v]; closeSb(); lucide.createIcons(); }
+
+    async function api(m, body) { const o = { method: m, headers: { "Content-Type":"application/json", "Authorization":"Basic "+btoa("admin:"+pw) } }; if(body) o.body = JSON.stringify(body); return fetch("/api/admin/guests", o); }
+
+    async function load() {
+      const r = await api("GET");
+      if (r.status === 401) { sessionStorage.removeItem("apw"); pw = prompt("Contraseña incorrecta:") || ""; if(pw) { sessionStorage.setItem("apw",pw); return load(); } return; }
+      guests = await r.json();
+      render();
+    }
+
+    function render() { renderStats(); renderRecent(); renderSummary(); renderGuests(); renderLinks(); const p = guests.filter(g=>g.confirmado&&g.cantidadConfirmada>0).reduce((s,g)=>s+(g.cantidadConfirmada||0),0); const mx = guests.reduce((s,g)=>s+g.maxPases,0); $("#page-sub").textContent = `${p}/${mx} personas · ${guests.length} invitaciones`; lucide.createIcons(); }
+
+    function renderStats() {
+      const t = guests.length, c = guests.filter(g=>g.confirmado&&g.cantidadConfirmada>0), d = guests.filter(g=>g.confirmado&&g.cantidadConfirmada===0), pn = guests.filter(g=>!g.confirmado&&g.activo);
+      const pp = c.reduce((s,g)=>s+(g.cantidadConfirmada||0),0);
+      const lc = guests.filter(g=>(g.categoria||"ambos")==="luis").length;
+      const cc = guests.filter(g=>(g.categoria||"ambos")==="cesia").length;
+      $("#stats-grid").innerHTML = [
+        card("mail","Invitaciones",t,`🤵 ${lc} · 👰 ${cc}`,"brand"),
+        card("check-circle","Confirmados",c.length,`${pp} personas`,"emerald"),
+        card("x-circle","No asisten",d.length,""  ,"red"),
+        card("clock","Pendientes",pn.length,`${t?Math.round((c.length+d.length)/t*100):0}%`,"amber"),
+      ].join("");
+    }
+
+    function card(icon,label,val,extra,color) {
+      const colors = { brand:"bg-brand-50 text-brand-600", emerald:"bg-emerald-50 text-emerald-600", red:"bg-red-50 text-red-600", amber:"bg-amber-50 text-amber-600" };
+      const valColors = { brand:"text-brand-700", emerald:"text-emerald-600", red:"text-red-500", amber:"text-amber-500" };
+      return `<div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow">
+        <div class="w-8 h-8 rounded-lg ${colors[color]} flex items-center justify-center mb-3"><i data-lucide="${icon}" class="w-4 h-4"></i></div>
+        <div class="text-2xl font-bold ${valColors[color]}">${val}</div>
+        <div class="text-xs text-gray-400 mt-0.5 uppercase tracking-wide font-medium">${label}</div>
+        ${extra ? `<div class="text-xs text-gray-500 mt-1.5">${extra}</div>` : ''}
+      </div>`;
+    }
+
+    function renderRecent() {
+      const list = guests.filter(g=>g.fechaConfirmacion).sort((a,b)=>new Date(b.fechaConfirmacion)-new Date(a.fechaConfirmacion)).slice(0,6);
+      $("#recent-list").innerHTML = list.length === 0 ? `<div class="py-10 text-center text-gray-300 text-sm">Sin actividad</div>` : list.map(g => `
+        <div class="flex items-center gap-3 px-5 py-3 hover:bg-gray-50/50 transition">
+          <div class="w-2 h-2 rounded-full ${g.cantidadConfirmada>0?'bg-emerald-400':'bg-red-400'} shrink-0"></div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm truncate"><span class="font-medium">${g.nombre}</span> ${g.cantidadConfirmada>0?`confirmó (${g.cantidadConfirmada})`:'no asistirá'}</p>
+          </div>
+          <span class="text-[11px] text-gray-400 shrink-0">${ago(g.fechaConfirmacion)}</span>
+        </div>
+      `).join("");
+    }
+
+    function renderSummary() {
+      const pp = guests.filter(g=>g.confirmado&&g.cantidadConfirmada>0).reduce((s,g)=>s+g.cantidadConfirmada,0);
+      const mx = guests.reduce((s,g)=>s+g.maxPases,0);
+      const ac = guests.filter(g=>g.activo).length;
+      const rows = [["Personas confirmadas",pp],["Capacidad máxima",mx],["Invitaciones activas",ac],["Ocupación",`${mx?Math.round(pp/mx*100):0}%`]];
+      $("#summary-list").innerHTML = rows.map(([l,v])=>`<div class="flex items-center justify-between px-5 py-3"><span class="text-sm text-gray-500">${l}</span><span class="text-sm font-semibold">${v}</span></div>`).join("");
+    }
+
+    function renderGuests() {
+      const q = ($("#search-input")?.value||"").toLowerCase();
+      let list = guests.filter(g=>g.nombre.toLowerCase().includes(q)||g.slug.includes(q)||(g.pareja||"").toLowerCase().includes(q));
+      if(filter==="confirmed") list=list.filter(g=>g.confirmado&&g.cantidadConfirmada>0);
+      else if(filter==="pending") list=list.filter(g=>!g.confirmado);
+      else if(filter==="declined") list=list.filter(g=>g.confirmado&&g.cantidadConfirmada===0);
+      if(catFilter!=="all") list=list.filter(g=>(g.categoria||"ambos")===catFilter);
+      
+      $("#guest-count").textContent = list.length;
+      if(list.length===0){ $("#guests-tbody").innerHTML=""; $("#guests-empty").classList.remove("hidden"); }
+      else {
+        $("#guests-empty").classList.add("hidden");
+        const catBadge = (c) => { const m={luis:'<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-600">Luis</span>',cesia:'<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-pink-50 text-pink-600">Cesia</span>',ambos:'<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-600">Ambos</span>'}; return m[c]||m.ambos; };
+        $("#guests-tbody").innerHTML = list.map(g=>`
+          <tr class="hover:bg-brand-50/30 transition ${!g.activo?'opacity-40':''}">
+            <td class="px-5 py-3">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-100 to-gold-100 flex items-center justify-center text-xs font-semibold text-brand-700 shrink-0">${g.nombre.charAt(0)}</div>
+                <div class="min-w-0">
+                  <p class="text-sm font-medium truncate">${g.nombre}${g.pareja?` <span class="text-gray-400">&</span> <span class="text-gray-600">${g.pareja}</span>`:''}</p>
+                  <p class="text-[11px] text-gray-400 font-mono truncate flex items-center gap-1.5">${g.slug} ${catBadge(g.categoria)}</p>
+                </div>
+              </div>
+            </td>
+            <td class="px-4 py-3 text-center text-sm">${g.maxPases}</td>
+            <td class="px-4 py-3 text-center">
+              ${g.confirmado?(g.cantidadConfirmada>0?'<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700">✓ Confirmado</span>':'<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-red-50 text-red-700">✗ No asiste</span>'):'<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700">● Pendiente</span>'}
+            </td>
+            <td class="px-4 py-3 text-center text-sm font-semibold">${g.cantidadConfirmada??'—'}</td>
+            <td class="px-4 py-3"><p class="text-xs text-gray-400 italic truncate max-w-[120px]">${g.mensaje||'—'}</p></td>
+            <td class="px-4 py-3 text-center">
+              <button data-act="toggle" data-slug="${g.slug}" data-active="${g.activo}" class="w-9 h-5 rounded-full relative transition-colors ${g.activo?'bg-emerald-400':'bg-gray-300'}">
+                <span class="absolute top-0.5 ${g.activo?'right-0.5':'left-0.5'} w-4 h-4 bg-white rounded-full shadow-sm transition-all"></span>
+              </button>
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-0.5">
+                <button data-act="copy" data-slug="${g.slug}" class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition" title="Copiar"><i data-lucide="link" class="w-3.5 h-3.5"></i></button>
+                ${g.confirmado?`<button data-act="reset" data-slug="${g.slug}" class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition" title="Resetear"><i data-lucide="undo-2" class="w-3.5 h-3.5"></i></button>`:''}
+                <button data-act="edit" data-slug="${g.slug}" class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition" title="Editar"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                <button data-act="delete" data-slug="${g.slug}" data-name="${g.nombre}" class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-red-50 text-gray-400 hover:text-red-500 transition" title="Eliminar"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+              </div>
+            </td>
+          </tr>
+        `).join("");
+      }
+      lucide.createIcons();
+    }
+
+    function renderLinks() {
+      const list = guests.filter(g=>g.activo);
+      $("#links-list").innerHTML = list.map(g=>`
+        <div class="flex items-center gap-3 px-5 py-3 hover:bg-gray-50/50 transition">
+          <div class="w-7 h-7 rounded-full bg-gold-100 flex items-center justify-center text-[11px] font-semibold text-gold-700 shrink-0">${g.nombre.charAt(0)}</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate">${g.nombre}</p>
+            <p class="text-[11px] text-gray-400 font-mono truncate">${location.origin}/invitacion/${g.slug}</p>
+          </div>
+          ${g.confirmado?(g.cantidadConfirmada>0?'<span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>':'<span class="w-2 h-2 rounded-full bg-red-400 shrink-0"></span>'):'<span class="w-2 h-2 rounded-full bg-amber-300 shrink-0"></span>'}
+          <button data-act="copy" data-slug="${g.slug}" class="shrink-0 flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-brand-700 hover:bg-brand-600 text-white rounded-lg transition">
+            <i data-lucide="copy" class="w-3 h-3"></i>Copiar
+          </button>
+        </div>
+      `).join("");
+      lucide.createIcons();
+    }
+
+    // ACTIONS
+    function copy(s, btn) { navigator.clipboard.writeText(`${location.origin}/invitacion/${s}`).then(()=>{ notify("Link copiado","success"); if(btn&&btn.textContent.includes("Copiar")){ btn.innerHTML='<i data-lucide="check" class="w-3 h-3"></i>OK'; btn.classList.replace("bg-brand-700","bg-emerald-500"); setTimeout(()=>{ btn.innerHTML='<i data-lucide="copy" class="w-3 h-3"></i>Copiar'; btn.classList.replace("bg-emerald-500","bg-brand-700"); lucide.createIcons(); },1500); lucide.createIcons(); } }); }
+    function copyAll() { const t = guests.filter(g=>g.activo).map(g=>`${g.nombre}: ${location.origin}/invitacion/${g.slug}`).join("\n"); navigator.clipboard.writeText(t).then(()=>notify(`${guests.filter(g=>g.activo).length} links copiados`,"success")); }
+    function addModal() { $("#modal-title").textContent="Nuevo invitado"; $("#f-edit").value=""; $("#f-name").value=""; $("#f-slug").value=""; $("#f-pareja").value=""; $$('input[name="pases"]').forEach(r=>r.checked=r.value==="2"); $$('input[name="categoria"]').forEach(r=>r.checked=r.value==="ambos"); $("#modal").classList.add("open"); setTimeout(()=>$("#f-name").focus(),200); lucide.createIcons(); }
+    function editModal(s) { const g=guests.find(x=>x.slug===s); if(!g)return; $("#modal-title").textContent="Editar invitado"; $("#f-edit").value=s; $("#f-name").value=g.nombre; $("#f-slug").value=g.slug; $("#f-pareja").value=g.pareja||""; $$('input[name="pases"]').forEach(r=>r.checked=r.value===String(g.maxPases)); $$('input[name="categoria"]').forEach(r=>r.checked=r.value===(g.categoria||"ambos")); $("#modal").classList.add("open"); lucide.createIcons(); }
+    function closeM() { $("#modal").classList.remove("open"); }
+    async function submit(e) { e.preventDefault(); const ed=$("#f-edit").value, nm=$("#f-name").value.trim(), sl=$("#f-slug").value.trim(), ps=parseInt(document.querySelector('input[name="pases"]:checked')?.value||"2"), pr=$("#f-pareja").value.trim(), cat=document.querySelector('input[name="categoria"]:checked')?.value||"ambos"; if(ed){await api("PUT",{slug:ed,updates:{nombre:nm,maxPases:ps,pareja:pr,categoria:cat}});notify("Actualizado","success");}else{const r=await api("POST",{nombre:nm,slug:sl,maxPases:ps,pareja:pr,categoria:cat});if(!r.ok){const d=await r.json();notify(d.error,"error");return;}notify("Invitado creado","success");} closeM(); await load(); }
+    async function toggle(s, cur) { await api("PUT",{slug:s,updates:{activo:!cur}}); notify(cur?"Desactivado":"Activado","info"); await load(); }
+    async function reset(s) { if(!confirm("¿Resetear confirmación?"))return; await api("PUT",{slug:s,updates:{confirmado:false}}); notify("Reseteado","success"); await load(); }
+    async function del(s, n) { if(!confirm(`¿Eliminar "${n}"?`))return; await api("DELETE",{slug:s}); notify("Eliminado","success"); await load(); }
+    function csv() { const h=["Nombre","Pareja","Categoría","Slug","Pases","Estado","Asisten","Mensaje","Fecha","Activo"]; const rows=guests.map(g=>[g.nombre,g.pareja||"",g.categoria||"ambos",g.slug,g.maxPases,g.confirmado?(g.cantidadConfirmada>0?"Sí":"No"):"Pendiente",g.cantidadConfirmada??"",g.mensaje||"",g.fechaConfirmacion||"",g.activo?"Sí":"No"]); const c=[h,...rows].map(r=>r.map(v=>`"${v}"`).join(",")).join("\n"); const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob(["\ufeff"+c],{type:"text/csv"})); a.download=`invitados-${new Date().toISOString().slice(0,10)}.csv`; a.click(); notify("CSV descargado","success"); }
+
+    // TOAST
+    function notify(msg, type="info") {
+      const icons = {success:"check-circle",error:"alert-circle",info:"info"};
+      const colors = {success:"border-emerald-200 bg-emerald-50",error:"border-red-200 bg-red-50",info:"border-blue-200 bg-blue-50"};
+      const iconColors = {success:"text-emerald-500",error:"text-red-500",info:"text-blue-500"};
+      const el = document.createElement("div");
+      el.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl border ${colors[type]} shadow-lg toast-enter`;
+      el.innerHTML = `<i data-lucide="${icons[type]}" class="w-4 h-4 ${iconColors[type]} shrink-0"></i><span class="text-sm font-medium text-gray-700">${msg}</span>`;
+      $("#toasts").appendChild(el);
+      lucide.createIcons();
+      setTimeout(()=>{ el.classList.replace("toast-enter","toast-exit"); setTimeout(()=>el.remove(),250); },3500);
+    }
+
+    // HELPERS
+    function slug(s) { return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9\s-]/g,"").trim().replace(/\s+/g,"-"); }
+    function ago(d) { const s=Math.floor((Date.now()-new Date(d))/1000); if(s<60)return "Ahora"; if(s<3600)return Math.floor(s/60)+"m"; if(s<86400)return Math.floor(s/3600)+"h"; if(s<604800)return Math.floor(s/86400)+"d"; return new Date(d).toLocaleDateString("es",{day:"numeric",month:"short"}); }
+
+    document.addEventListener("DOMContentLoaded", ()=>{ init(); lucide.createIcons(); });
+  </script>
+</body>
+</html>

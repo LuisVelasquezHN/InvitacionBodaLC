@@ -1,38 +1,321 @@
 ---
-// Array de imágenes de ejemplo. Reemplaza con tus rutas reales en /public/images/
 const photos = [
-    "/images/optimos/_DSC3145.webp",
-    "/images/optimos/_DSC3123.webp",
-    "/images/optimos/_DSC3217.webp",
-    "/images/optimos/_DSC3508.webp",
-    "/images/optimos/_DSC3214.webp",
-    "/images/optimos/_DSC3274.webp",
-    // Agrega más si deseas
+  { src: "_DSC3145", alt: "Cesia y Luis juntos" },
+  { src: "_DSC3123", alt: "Sonrisas de amor" },
+  { src: "_DSC3217", alt: "Caminando juntos" },
+  { src: "_DSC3274", alt: "Felicidad compartida" },
+  { src: "_DSC3508", alt: "Un momento especial" },
+  { src: "_DSC3214", alt: "Nuestro día" },
 ];
 ---
 
-<section class="py-16 px-4 max-w-5xl mx-auto">
-    <h2 class="script-font text-5xl text-center mb-12">
-        Nuestra Promesa de Amor
+<section class="py-16 px-4" data-animate="fade-up">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="script-font text-5xl md:text-6xl text-center mb-4 text-wedding-dark-green">
+      Nuestra Historia
     </h2>
+    <p class="text-center text-gray-500 text-sm mb-10 italic font-body">
+      Momentos que nos trajeron hasta aquí
+    </p>
 
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {
-            photos.map((photo, index) => (
-                <div
-                    class={`overflow-hidden rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 aspect-square ${index % 3 === 0 ? "md:col-span-2 md:row-span-2" : ""}`}
-                >
-                    <img
-                        src={
-                            photo.startsWith("/")
-                                ? photo
-                                : `https://source.unsplash.com/random/800x800/?wedding,couple,love&sig=${index}`
-                        }
-                        alt="Foto de la pareja"
-                        class="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
-                    />
-                </div>
-            ))
-        }
+    <div class="gallery-grid">
+      {photos.map((photo, index) => (
+        <div 
+          class={`gallery-item gallery-item--${index}`}
+          data-animate="fade-in"
+          data-gallery-index={index}
+          role="button"
+          tabindex="0"
+          aria-label={`Ver foto: ${photo.alt}`}
+        >
+          <picture>
+            <source 
+              media="(max-width: 640px)" 
+              srcset={`/images/optimos/${photo.src}-mobile.webp`} 
+            />
+            <img
+              src={`/images/optimos/${photo.src}.webp`}
+              alt={photo.alt}
+              class="gallery-img"
+              loading="lazy"
+              decoding="async"
+            />
+          </picture>
+        </div>
+      ))}
     </div>
+  </div>
 </section>
+
+<!-- Lightbox se renderiza a nivel de página, fuera del overflow-hidden -->
+
+<style>
+  /* Grid: 6 fotos, posición 0 y 4 son grandes (esquina sup-izq y inf-der) */
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .gallery-grid {
+      grid-template-columns: repeat(3, 1fr);
+      grid-auto-rows: 300px;
+      gap: 0.75rem;
+    }
+
+    /* Primera foto: grande arriba izquierda */
+    .gallery-item--0 {
+      grid-column: span 2;
+      grid-row: span 2;
+    }
+
+    /* Quinta foto: grande abajo derecha */
+    .gallery-item--4 {
+      grid-column: 2 / span 2;
+      grid-row: span 2;
+    }
+  }
+
+  .gallery-item {
+    overflow: hidden;
+    border-radius: 0.75rem;
+    position: relative;
+    cursor: pointer;
+    aspect-ratio: 1;
+  }
+
+  @media (min-width: 768px) {
+    .gallery-item {
+      aspect-ratio: auto;
+    }
+  }
+
+  .gallery-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .gallery-item:hover .gallery-img {
+    transform: scale(1.06);
+  }
+
+  .gallery-item::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(74, 93, 70, 0);
+    transition: background 0.3s ease;
+    border-radius: 0.75rem;
+    pointer-events: none;
+  }
+
+  .gallery-item:hover::after {
+    background: rgba(74, 93, 70, 0.08);
+  }
+
+  /* Lightbox */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+
+  .lightbox.is-open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .lightbox-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+    z-index: 10;
+  }
+
+  .lightbox-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+    z-index: 10;
+  }
+
+  .lightbox-nav:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  .lightbox-prev { left: 1rem; }
+  .lightbox-next { right: 1rem; }
+
+  .lightbox-content {
+    max-width: 90vw;
+    max-height: 85vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lightbox-image {
+    max-width: 100%;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 0.5rem;
+    transition: opacity 0.3s ease;
+  }
+
+  .lightbox-counter {
+    position: absolute;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+  }
+</style>
+
+<script>
+  function initGallery() {
+    const items = document.querySelectorAll("[data-gallery-index]");
+    const lightbox = document.getElementById("lightbox");
+    const lightboxImg = document.getElementById("lightbox-img");
+    const lightboxClose = document.getElementById("lightbox-close");
+    const lightboxPrev = document.getElementById("lightbox-prev");
+    const lightboxNext = document.getElementById("lightbox-next");
+    const lightboxCounter = document.getElementById("lightbox-counter");
+
+    if (!lightbox || !lightboxImg || items.length === 0) return;
+
+    // Extraer las URLs de las imágenes directamente del DOM
+    const srcs = [];
+    const alts = [];
+    items.forEach((item) => {
+      const img = item.querySelector("img");
+      if (img) {
+        srcs.push(img.src);
+        alts.push(img.alt || "");
+      }
+    });
+
+    let currentIndex = 0;
+
+    function openLightbox(index) {
+      currentIndex = index;
+      updateImage();
+      lightbox.classList.add("is-open");
+      lightbox.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove("is-open");
+      lightbox.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    }
+
+    function updateImage() {
+      lightboxImg.style.opacity = "0";
+      setTimeout(() => {
+        lightboxImg.src = srcs[currentIndex];
+        lightboxImg.alt = alts[currentIndex];
+        lightboxImg.style.opacity = "1";
+      }, 150);
+      if (lightboxCounter) {
+        lightboxCounter.textContent = `${currentIndex + 1} / ${srcs.length}`;
+      }
+    }
+
+    function next() {
+      currentIndex = (currentIndex + 1) % srcs.length;
+      updateImage();
+    }
+
+    function prev() {
+      currentIndex = (currentIndex - 1 + srcs.length) % srcs.length;
+      updateImage();
+    }
+
+    items.forEach((item) => {
+      item.addEventListener("click", () => {
+        const idx = parseInt(item.getAttribute("data-gallery-index") || "0");
+        openLightbox(idx);
+      });
+      item.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          const idx = parseInt(item.getAttribute("data-gallery-index") || "0");
+          openLightbox(idx);
+        }
+      });
+    });
+
+    lightboxClose?.addEventListener("click", closeLightbox);
+    lightboxNext?.addEventListener("click", next);
+    lightboxPrev?.addEventListener("click", prev);
+
+    lightbox.addEventListener("click", (e) => {
+      if (e.target === lightbox) {
+        closeLightbox();
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (!lightbox.classList.contains("is-open")) return;
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowRight") next();
+      if (e.key === "ArrowLeft") prev();
+    });
+
+    // Swipe support for mobile
+    let touchStartX = 0;
+    lightbox.addEventListener("touchstart", (e) => {
+      touchStartX = e.touches[0].clientX;
+    });
+    lightbox.addEventListener("touchend", (e) => {
+      const diff = touchStartX - e.changedTouches[0].clientX;
+      if (Math.abs(diff) > 50) {
+        diff > 0 ? next() : prev();
+      }
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", initGallery);
+  document.addEventListener("astro:page-load", initGallery);
+</script>

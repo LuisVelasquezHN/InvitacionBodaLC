@@ -6,11 +6,15 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "seed": "node scripts/seed.mjs"
   },
   "dependencies": {
+    "@astrojs/vercel": "^8.2.11",
     "@tailwindcss/vite": "^4.1.18",
+    "@upstash/redis": "^1.38.2",
     "astro": "^5.16.8",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4.1.18"
   }
 }

@@ -1,151 +1,162 @@
 ---
-// Configuramos la fecha fija: Año, Mes (0-11), Día, Hora, Minutos
-// Nota: Febrero es el mes 1 en JavaScript (0 es enero)
-// Formato: YYYY, MM (0-index), DD, HH, mm
 const targetDate = new Date(2027, 1, 20, 16, 0, 0);
 const targetDateString = targetDate.toISOString();
 ---
 
-<section class="pb-12 px-4 text-center">
-    <h3
-        class="text-2xl mb-8 text-wedding-gold tracking-widest uppercase font-serif-elegant"
-    >
-        Tiempo restante
-    </h3>
+<section class="py-16 px-4 text-center" data-animate="fade-up">
+  <h3 class="text-xl md:text-2xl mb-2 text-wedding-gold tracking-widest uppercase font-serif-elegant">
+    Faltan
+  </h3>
+  <p class="text-sm text-gray-500 mb-8 font-body italic">para el gran día</p>
 
-    <div
-        class="flex justify-center gap-4 md:gap-8"
-        id="countdown-timer"
-        data-target={targetDateString}
-    >
-        {
-            /* Lógica de clases movida directamente al HTML para evitar errores de @apply */
-        }
-        <div
-            class="flex flex-col items-center p-4 bg-white/50 backdrop-blur-sm rounded-lg border border-wedding-sage/30 shadow-sm w-20 md:w-24"
-        >
-            <span
-                class="number text-3xl md:text-4xl font-serif-elegant text-wedding-dark-green font-bold transition-all duration-300"
-                id="days">00</span
-            >
-            <span class="text-sm uppercase tracking-wider text-gray-600 mt-2"
-                >Días</span
-            >
-        </div>
-
-        <div
-            class="flex flex-col items-center p-4 bg-white/50 backdrop-blur-sm rounded-lg border border-wedding-sage/30 shadow-sm w-20 md:w-24"
-        >
-            <span
-                class="number text-3xl md:text-4xl font-serif-elegant text-wedding-dark-green font-bold transition-all duration-300"
-                id="hours">00</span
-            >
-            <span class="text-sm uppercase tracking-wider text-gray-600 mt-2"
-                >Hs</span
-            >
-        </div>
-
-        <div
-            class="flex flex-col items-center p-4 bg-white/50 backdrop-blur-sm rounded-lg border border-wedding-sage/30 shadow-sm w-20 md:w-24"
-        >
-            <span
-                class="number text-3xl md:text-4xl font-serif-elegant text-wedding-dark-green font-bold transition-all duration-300"
-                id="minutes">00</span
-            >
-            <span class="text-sm uppercase tracking-wider text-gray-600 mt-2"
-                >Min</span
-            >
-        </div>
-
-        <div
-            class="flex flex-col items-center p-4 bg-white/50 backdrop-blur-sm rounded-lg border border-wedding-sage/30 shadow-sm w-20 md:w-24"
-        >
-            <span
-                class="number text-3xl md:text-4xl font-serif-elegant text-wedding-dark-green font-bold transition-all duration-300"
-                id="seconds">00</span
-            >
-            <span class="text-sm uppercase tracking-wider text-gray-600 mt-2"
-                >Seg</span
-            >
-        </div>
+  <div
+    class="flex justify-center gap-3 md:gap-6"
+    id="countdown-timer"
+    data-target={targetDateString}
+  >
+    <div class="countdown-card">
+      <span class="countdown-number" id="days">00</span>
+      <span class="countdown-label">Días</span>
     </div>
+
+    <div class="text-2xl md:text-3xl text-wedding-gold self-center font-light">:</div>
+
+    <div class="countdown-card">
+      <span class="countdown-number" id="hours">00</span>
+      <span class="countdown-label">Horas</span>
+    </div>
+
+    <div class="text-2xl md:text-3xl text-wedding-gold self-center font-light">:</div>
+
+    <div class="countdown-card">
+      <span class="countdown-number" id="minutes">00</span>
+      <span class="countdown-label">Min</span>
+    </div>
+
+    <div class="text-2xl md:text-3xl text-wedding-gold self-center font-light">:</div>
+
+    <div class="countdown-card">
+      <span class="countdown-number" id="seconds">00</span>
+      <span class="countdown-label">Seg</span>
+    </div>
+  </div>
 </section>
 
 <style>
-    /* Solo dejamos lo que Tailwind no puede hacer por defecto (animaciones personalizadas) */
-    .number.pulse {
-        animation: pulse-animation 0.5s ease-out;
-    }
+  .countdown-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(8px);
+    border-radius: 1rem;
+    border: 1px solid rgba(143, 158, 139, 0.2);
+    box-shadow: 0 4px 20px rgba(74, 93, 70, 0.06);
+    min-width: 4rem;
+    transition: transform 0.3s ease;
+  }
 
-    @keyframes pulse-animation {
-        0% {
-            transform: scale(1);
-        }
-        50% {
-            transform: scale(1.1);
-            color: var(--color-wedding-gold);
-        }
-        100% {
-            transform: scale(1);
-        }
+  .countdown-card:hover {
+    transform: translateY(-2px);
+  }
+
+  @media (min-width: 768px) {
+    .countdown-card {
+      min-width: 5.5rem;
+      padding: 1.25rem 1.5rem;
     }
+  }
+
+  .countdown-number {
+    font-family: var(--font-serif-elegant);
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--color-wedding-dark-green);
+    line-height: 1;
+    transition: transform 0.3s ease, color 0.3s ease;
+  }
+
+  @media (min-width: 768px) {
+    .countdown-number {
+      font-size: 2.5rem;
+    }
+  }
+
+  .countdown-number.flip {
+    animation: flip-animation 0.6s ease-out;
+  }
+
+  .countdown-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #6b7280;
+    margin-top: 0.5rem;
+    font-family: var(--font-serif-elegant);
+  }
+
+  @keyframes flip-animation {
+    0% { transform: rotateX(0deg); }
+    50% { transform: rotateX(90deg); color: var(--color-wedding-gold); }
+    100% { transform: rotateX(0deg); }
+  }
 </style>
 
 <script>
-    const initCountdown = () => {
-        const timer = document.getElementById("countdown-timer");
-        if (!timer) return;
+  const initCountdown = () => {
+    const timer = document.getElementById("countdown-timer");
+    if (!timer) return;
 
-        const targetDateAttr = timer.dataset.target;
-        if (!targetDateAttr) return;
+    const targetDateAttr = timer.dataset.target;
+    if (!targetDateAttr) return;
 
-        const target = new Date(targetDateAttr).getTime();
+    const target = new Date(targetDateAttr).getTime();
 
-        const daysEl = document.getElementById("days");
-        const hoursEl = document.getElementById("hours");
-        const minutesEl = document.getElementById("minutes");
-        const secondsEl = document.getElementById("seconds");
+    const daysEl = document.getElementById("days");
+    const hoursEl = document.getElementById("hours");
+    const minutesEl = document.getElementById("minutes");
+    const secondsEl = document.getElementById("seconds");
 
-        const updateCountdown = () => {
-            const now = new Date().getTime();
-            const distance = target - now;
+    const updateCountdown = () => {
+      const now = new Date().getTime();
+      const distance = target - now;
 
-            if (distance < 0) {
-                timer.innerHTML =
-                    "<div class='text-2xl font-serif-elegant text-wedding-dark-green'>¡Ha llegado el gran día!</div>";
-                return;
-            }
+      if (distance < 0) {
+        timer.innerHTML = `
+          <div class="text-center">
+            <p class="text-2xl font-serif-elegant text-wedding-dark-green">🎉 ¡Ha llegado el gran día!</p>
+          </div>
+        `;
+        return;
+      }
 
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            const hours = Math.floor(
-                (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
-            );
-            const minutes = Math.floor(
-                (distance % (1000 * 60 * 60)) / (1000 * 60),
-            );
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-            const updateElement = (el: HTMLElement | null, value: number) => {
-                if (!el) return;
-                const newValue = String(value).padStart(2, "0");
-                if (el.innerText !== newValue) {
-                    el.innerText = newValue;
-                    el.classList.remove("pulse");
-                    void el.offsetWidth;
-                    el.classList.add("pulse");
-                }
-            };
+      const updateElement = (el: HTMLElement | null, value: number) => {
+        if (!el) return;
+        const newValue = String(value).padStart(2, "0");
+        if (el.innerText !== newValue) {
+          el.innerText = newValue;
+          el.classList.remove("flip");
+          void el.offsetWidth;
+          el.classList.add("flip");
+        }
+      };
 
-            updateElement(daysEl, days);
-            updateElement(hoursEl, hours);
-            updateElement(minutesEl, minutes);
-            updateElement(secondsEl, seconds);
-        };
-
-        setInterval(updateCountdown, 1000);
-        updateCountdown();
+      updateElement(daysEl, days);
+      updateElement(hoursEl, hours);
+      updateElement(minutesEl, minutes);
+      updateElement(secondsEl, seconds);
     };
 
-    document.addEventListener("DOMContentLoaded", initCountdown);
-    document.addEventListener("astro:page-load", initCountdown);
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+  };
+
+  document.addEventListener("DOMContentLoaded", initCountdown);
+  document.addEventListener("astro:page-load", initCountdown);
 </script>
