@@ -1,0 +1,109 @@
+---
+// Definimos los colores de la paleta sugerida
+const palette = [
+    { name: "Sage", hex: "#8F9E8B" },
+    { name: "Beige", hex: "#E5D3B3" },
+    { name: "Nude", hex: "#F2E2CE" },
+    { name: "Dusty Rose", hex: "#D4A373" },
+    { name: "Olive", hex: "#606C38" },
+    { name: "Terracotta", hex: "#BC6C25" },
+];
+---
+
+<section id="dress-code" class="py-20 px-4 bg-white/30 backdrop-blur-sm">
+    <div class="max-w-3xl mx-auto text-center">
+        <h2 class="script-font text-5xl mb-6 text-wedding-dark-green">
+            Código de Vestimenta
+        </h2>
+        <p
+            class="font-serif-elegant text-xl text-wedding-gold tracking-widest mb-8 uppercase"
+        >
+            Formal / Terraza
+        </p>
+
+        <p class="text-gray-600 mb-12 italic max-w-xl mx-auto">
+            Queremos que nuestras fotos reflejen la armonía de este día. Por
+            ello, te invitamos a seguir nuestra paleta de colores inspirada en
+            la naturaleza.
+        </p>
+
+        <div class="flex flex-wrap justify-center gap-4 mb-16">
+            {
+                palette.map((color) => (
+                    <div class="flex flex-col items-center group">
+                        <div
+                            class="w-16 h-16 md:w-20 md:h-20 rounded-full shadow-inner border-4 border-white transform group-hover:scale-110 transition-transform duration-300"
+                            style={`background-color: ${color.hex}`}
+                        />
+                        <span class="mt-2 text-xs uppercase tracking-tighter text-gray-500 font-serif-elegant">
+                            {color.name}
+                        </span>
+                    </div>
+                ))
+            }
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8 text-left">
+            <div
+                class="bg-white/60 p-6 rounded-2xl border border-wedding-sage/20 shadow-sm"
+            >
+                <h3
+                    class="font-serif-elegant text-wedding-dark-green mb-4 flex items-center"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-6 w-6 mr-2 text-wedding-gold"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Sugerencias
+                </h3>
+                <ul class="space-y-2 text-gray-600 text-sm">
+                    <li>• Trajes en tonos claros o tierra para caballeros.</li>
+                    <li>• Vestidos midi o largos en tonos pasteles o mates.</li>
+                    <li>• Calzado cómodo para jardín/terraza.</li>
+                </ul>
+            </div>
+
+            <div
+                class="bg-red-50/50 p-6 rounded-2xl border border-red-100 shadow-sm"
+            >
+                <h3
+                    class="font-serif-elegant text-red-800 mb-4 flex items-center"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-6 w-6 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        ></path>
+                    </svg>
+                    Restricciones
+                </h3>
+                <ul class="space-y-2 text-red-900/70 text-sm font-medium">
+                    <li>
+                        • Evitar el color Blanco <strong
+                            >(exclusivo de la novia)</strong
+                        >.
+                    </li>
+                    <li>• Evitar colores Rojos intensos o llamativos.</li>
+                    <li>• Evitar colores Neón o estampados muy cargados.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>

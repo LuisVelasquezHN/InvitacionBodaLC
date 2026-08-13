@@ -1,0 +1,151 @@
+---
+// Configuramos la fecha fija: Año, Mes (0-11), Día, Hora, Minutos
+// Nota: Febrero es el mes 1 en JavaScript (0 es enero)
+// Formato: YYYY, MM (0-index), DD, HH, mm
+const targetDate = new Date(2027, 1, 20, 16, 0, 0);
+const targetDateString = targetDate.toISOString();
+---
+
+<section class="pb-12 px-4 text-center">
+    <h3
+        class="text-2xl mb-8 text-wedding-gold tracking-widest uppercase font-serif-elegant"
+    >
+        Tiempo restante
+    </h3>
+
+    <div
+        class="flex justify-center gap-4 md:gap-8"
+        id="countdown-timer"
+        data-target={targetDateString}
+    >
+        {
+            /* Lógica de clases movida directamente al HTML para evitar errores de @apply */
+        }
+        <div
+            class="flex flex-col items-center p-4 bg-white/50 backdrop-blur-sm rounded-lg border border-wedding-sage/30 shadow-sm w-20 md:w-24"
+        >
+            <span
+                class="number text-3xl md:text-4xl font-serif-elegant text-wedding-dark-green font-bold transition-all duration-300"
+                id="days">00</span
+            >
+            <span class="text-sm uppercase tracking-wider text-gray-600 mt-2"
+                >Días</span
+            >
+        </div>
+
+        <div
+            class="flex flex-col items-center p-4 bg-white/50 backdrop-blur-sm rounded-lg border border-wedding-sage/30 shadow-sm w-20 md:w-24"
+        >
+            <span
+                class="number text-3xl md:text-4xl font-serif-elegant text-wedding-dark-green font-bold transition-all duration-300"
+                id="hours">00</span
+            >
+            <span class="text-sm uppercase tracking-wider text-gray-600 mt-2"
+                >Hs</span
+            >
+        </div>
+
+        <div
+            class="flex flex-col items-center p-4 bg-white/50 backdrop-blur-sm rounded-lg border border-wedding-sage/30 shadow-sm w-20 md:w-24"
+        >
+            <span
+                class="number text-3xl md:text-4xl font-serif-elegant text-wedding-dark-green font-bold transition-all duration-300"
+                id="minutes">00</span
+            >
+            <span class="text-sm uppercase tracking-wider text-gray-600 mt-2"
+                >Min</span
+            >
+        </div>
+
+        <div
+            class="flex flex-col items-center p-4 bg-white/50 backdrop-blur-sm rounded-lg border border-wedding-sage/30 shadow-sm w-20 md:w-24"
+        >
+            <span
+                class="number text-3xl md:text-4xl font-serif-elegant text-wedding-dark-green font-bold transition-all duration-300"
+                id="seconds">00</span
+            >
+            <span class="text-sm uppercase tracking-wider text-gray-600 mt-2"
+                >Seg</span
+            >
+        </div>
+    </div>
+</section>
+
+<style>
+    /* Solo dejamos lo que Tailwind no puede hacer por defecto (animaciones personalizadas) */
+    .number.pulse {
+        animation: pulse-animation 0.5s ease-out;
+    }
+
+    @keyframes pulse-animation {
+        0% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+            color: var(--color-wedding-gold);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+</style>
+
+<script>
+    const initCountdown = () => {
+        const timer = document.getElementById("countdown-timer");
+        if (!timer) return;
+
+        const targetDateAttr = timer.dataset.target;
+        if (!targetDateAttr) return;
+
+        const target = new Date(targetDateAttr).getTime();
+
+        const daysEl = document.getElementById("days");
+        const hoursEl = document.getElementById("hours");
+        const minutesEl = document.getElementById("minutes");
+        const secondsEl = document.getElementById("seconds");
+
+        const updateCountdown = () => {
+            const now = new Date().getTime();
+            const distance = target - now;
+
+            if (distance < 0) {
+                timer.innerHTML =
+                    "<div class='text-2xl font-serif-elegant text-wedding-dark-green'>¡Ha llegado el gran día!</div>";
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor(
+                (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+            );
+            const minutes = Math.floor(
+                (distance % (1000 * 60 * 60)) / (1000 * 60),
+            );
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            const updateElement = (el: HTMLElement | null, value: number) => {
+                if (!el) return;
+                const newValue = String(value).padStart(2, "0");
+                if (el.innerText !== newValue) {
+                    el.innerText = newValue;
+                    el.classList.remove("pulse");
+                    void el.offsetWidth;
+                    el.classList.add("pulse");
+                }
+            };
+
+            updateElement(daysEl, days);
+            updateElement(hoursEl, hours);
+            updateElement(minutesEl, minutes);
+            updateElement(secondsEl, seconds);
+        };
+
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+    };
+
+    document.addEventListener("DOMContentLoaded", initCountdown);
+    document.addEventListener("astro:page-load", initCountdown);
+</script>

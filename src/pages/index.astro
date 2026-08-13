@@ -1,0 +1,322 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Countdown from "../components/Countdown.astro";
+import Gallery from "../components/Gallery.astro";
+import Gifts from "../components/Gifts.astro";
+import RSVPForm from "../components/RSVPForm.astro";
+import "../styles/global.css";
+import DressCode from "../components/DressCode.astro";
+
+// Usa placeholders si no tienes las imágenes locales aún
+const botanicalTop = "/images/botanical-top.png"; // Debería ser una imagen con transparencia (PNG)
+const botanicalBottom = "/images/botanical-bottom.png";
+const heroImage = "/images/optimos/_DSC3356.webp"; // Reemplaza con tu foto vertical
+const portraitImage = "/images/optimos/_DSC3214.webp";
+const footerImage = "/images/optimos/_DSC3201.webp";
+---
+
+<script type="module">
+	async function loadInvitations() {
+		const response = await fetch("/api/invitations");
+		const text = await response.text(); // 👈 NO json
+		console.log("RAW RESPONSE:", text);
+	}
+
+	loadInvitations();
+</script>
+
+<Layout title="Boda de Cesia y Luis">
+	<main
+		class="relative max-w-4xl mx-auto bg-white shadow-2xl overflow-hidden"
+	>
+		<div
+			class="absolute top-0 left-0 w-full h-64 bg-contain bg-no-repeat bg-top opacity-80 z-10 pointer-events-none"
+			style={`background-image: url('${botanicalTop}');`}
+		>
+		</div>
+
+		<header class="text-center pt-24 pb-12 relative z-20 px-4">
+			<h1
+				class="font-serif-elegant text-6xl text-wedding-dark-green mb-6 tracking-widest"
+			>
+				C <span class="text-wedding-sage">&</span> L
+			</h1>
+			<blockquote
+				class="font-body italic text-gray-600 max-w-md mx-auto text-lg leading-relaxed"
+			>
+				"Y sobre todas estas cosas vestíos de amor, que es el vínculo
+				perfecto."
+				<footer
+					class="text-sm mt-2 not-italic text-wedding-gold uppercase tracking-wider"
+				>
+					- Colosenses 3:14
+				</footer>
+			</blockquote>
+		</header>
+
+		<div class="relative h-[70vh] md:h-[80vh] w-full overflow-hidden">
+			<div
+				class="absolute inset-0 bg-gradient-to-b from-white/90 via-transparent to-transparent"
+			>
+			</div>
+			<img
+				src={heroImage}
+				alt="Cesia y Luis"
+				class="w-full h-full object-cover object-center"
+			/>
+			<div
+				class="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-transparent"
+			>
+			</div>
+		</div>
+
+		<section class="text-center -mt-32 relative z-30 pb-16 px-4">
+			<div
+				class="mb-8 text-sm font-serif-elegant text-gray-500 uppercase tracking-widest"
+			>
+				<p>Con la bendición de Dios y de sus padres</p>
+				<div
+					class="flex justify-between max-w-xs mx-auto mt-4 text-xs md:text-sm leading-loose"
+				>
+					<div>
+						<p>Wendy Bonilla</p>
+						<p>Jorge Mejía</p>
+					</div>
+					<div>
+						<p>Jesica Guerrero</p>
+						<p>Oscar Bonilla</p>
+					</div>
+				</div>
+			</div>
+
+			<h2
+				class="script-font text-7xl md:text-8xl text-wedding-dark-green mb-6 relative inline-block"
+			>
+				Cesia <span
+					class="text-4xl md:text-6xl text-wedding-sage align-middle"
+					>&</span
+				> Luis
+			</h2>
+			<p class="text-xl font-body italic text-gray-600 mb-10">
+				Convidan para su enlace matrimonial
+			</p>
+
+			<div
+				class="inline-block border-y-2 border-wedding-gold/50 py-6 px-10 mb-12"
+			>
+				<p
+					class="font-serif-elegant text-3xl md:text-4xl text-wedding-dark-green uppercase tracking-widest mb-2"
+				>
+					20 de Febrero de 2027
+				</p>
+				<p
+					class="font-serif-elegant text-xl text-gray-700 uppercase tracking-wider"
+				>
+					Sábado, a las 16:00 H
+				</p>
+			</div>
+
+			<div class="font-body text-lg text-gray-700 leading-relaxed">
+				<p
+					class="font-bold text-wedding-dark-green uppercase tracking-wider mb-1"
+				>
+					Casa Venuat
+				</p>
+				<p>Valle de Ángeles</p>
+				<p>Francisco Morazán, Honduras</p>
+			</div>
+		</section>
+
+		<Countdown />
+
+		<div class="py-12 relative">
+			<div
+				class="absolute inset-0 bg-gradient-to-b from-white/90 via-transparent to-transparent"
+			>
+			</div>
+			<img
+				src={portraitImage}
+				alt="Pareja sonriendo"
+				class="w-full h-96 object-cover object-center shadow-lg rounded-sm"
+			/>
+			<div
+				class="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-transparent"
+			>
+			</div>
+		</div>
+
+		<section class="py-12 text-center px-4">
+			<p
+				class="text-sm uppercase tracking-widest text-gray-500 mb-8 font-serif-elegant"
+			>
+				Acceso Rápido
+			</p>
+			<div
+				class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-2xl mx-auto"
+			>
+				<a
+					href="https://www.google.com/maps/place/Casa+venuat/@14.1447361,-87.0401978,1075m/data=!3m2!1e3!4b1!4m6!3m5!1s0x8f6fafe1667488cf:0x6be831cc2ebb588d!8m2!3d14.1447309!4d-87.0376229!16s%2Fg%2F11gx_c831m!5m1!1e1?entry=ttu&g_ep=EgoyMDI2MDEwNy4wIKXMDSoASAFQAw%3D%3D"
+					target="_blank"
+					class="flex flex-col items-center group cursor-pointer"
+				>
+					<div
+						class="w-16 h-16 bg-wedding-dark-green rounded-full flex items-center justify-center text-white shadow-lg group-hover:bg-wedding-gold transition-colors"
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="h-8 w-8"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+							><path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+							></path><path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+							></path></svg
+						>
+					</div>
+					<span
+						class="mt-3 text-xs uppercase tracking-wider font-serif-elegant"
+						>Ubicación</span
+					>
+				</a>
+				<a
+					href="#rsvp"
+					class="flex flex-col items-center group cursor-pointer"
+				>
+					<div
+						class="w-16 h-16 bg-wedding-dark-green rounded-full flex items-center justify-center text-white shadow-lg group-hover:bg-wedding-gold transition-colors"
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="h-8 w-8"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+							><path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+							></path></svg
+						>
+					</div>
+					<span
+						class="mt-3 text-xs uppercase tracking-wider font-serif-elegant"
+						>Confirmar</span
+					>
+				</a>
+				<div class="flex flex-col items-center group opacity-50">
+					<div
+						class="w-16 h-16 bg-wedding-sage rounded-full flex items-center justify-center text-white shadow-lg"
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="h-8 w-8"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+							><path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+							></path></svg
+						>
+					</div>
+					<span
+						class="mt-3 text-xs uppercase tracking-wider font-serif-elegant"
+						>Web de Boda</span
+					>
+				</div>
+				<a
+					href="#gifts"
+					class="flex flex-col items-center group cursor-pointer"
+				>
+					<div class="flex flex-col items-center group">
+						<div
+							class="w-16 h-16 bg-wedding-sage rounded-full flex items-center justify-center text-white shadow-lg"
+						>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								class="h-8 w-8"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+								><path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+								></path></svg
+							>
+						</div>
+						<span
+							class="mt-3 text-xs uppercase tracking-wider font-serif-elegant"
+							>Mesa Regalos</span
+						>
+					</div>
+				</a>
+			</div>
+		</section>
+
+		<DressCode />
+
+		<Gallery />
+
+		<Gifts />
+
+		<RSVPForm />
+
+		<footer class="text-center pt-16 relative">
+			<h2
+				class="script-font text-6xl text-wedding-dark-green mb-12 relative z-20"
+			>
+				¡Esperamos por ustedes!
+			</h2>
+
+			<!-- <div class="relative h-80 md:h-96 w-full overflow-hidden z-10">
+				<img
+					src={footerImage}
+					alt="Pareja caminando"
+					class="w-full h-full object-cover object-center"
+				/>
+				<div
+					class="absolute inset-0 bg-wedding-dark-green/20 mix-blend-multiply"
+				>
+				</div>
+			</div> -->
+			<div class="pt-12 relative">
+				<div
+					class="absolute inset-0 bg-gradient-to-b from-white/90 via-transparent to-transparent"
+				>
+				</div>
+				<img
+					src={footerImage}
+					alt="Pareja sonriendo"
+					class="w-full h-96 object-cover object-center shadow-lg rounded-sm"
+				/>
+			</div>
+
+			<div
+				class="absolute bottom-0 left-0 w-full h-64 bg-contain bg-no-repeat bg-bottom opacity-80 z-20 pointer-events-none"
+				style={`background-image: url('${botanicalBottom}');`}
+			>
+			</div>
+		</footer>
+	</main>
+</Layout>
+
+<style>
+	/* Ajustes finos para que se parezca más a la imagen */
+	h1,
+	h2.script-font {
+		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
+	}
+</style>

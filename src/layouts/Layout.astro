@@ -1,0 +1,43 @@
+---
+// src/layouts/Layout.astro
+---
+
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>Invitación de Boda</title>
+	</head>
+	<body class="bg-wedding-cream font-body antialiased">
+		<slot />
+	</body>
+</html>
+
+<style is:global>
+	@import "tailwindcss";
+
+	@theme {
+		--font-serif-elegant: "Cinzel Decorative", serif;
+		--font-script: "Great Vibes", cursive;
+		--font-body: "Lora", serif;
+
+		--color-wedding-sage: #8f9e8b;
+		--color-wedding-dark-green: #4a5d46;
+		--color-wedding-cream: #f9f7f1;
+		--color-wedding-gold: #bfa37c;
+	}
+
+	@import url("https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Great+Vibes&family=Lora:ital,wght@0,400;0,700&display=swap");
+
+	/* Estilos extra para los títulos */
+	h1,
+	h2,
+	h3 {
+		@apply font-serif-elegant text-wedding-dark-green;
+	}
+
+	.script-font {
+		@apply font-script text-wedding-sage;
+	}
+</style>

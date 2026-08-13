@@ -1,0 +1,38 @@
+---
+// Array de imágenes de ejemplo. Reemplaza con tus rutas reales en /public/images/
+const photos = [
+    "/images/optimos/_DSC3145.webp",
+    "/images/optimos/_DSC3123.webp",
+    "/images/optimos/_DSC3217.webp",
+    "/images/optimos/_DSC3508.webp",
+    "/images/optimos/_DSC3214.webp",
+    "/images/optimos/_DSC3274.webp",
+    // Agrega más si deseas
+];
+---
+
+<section class="py-16 px-4 max-w-5xl mx-auto">
+    <h2 class="script-font text-5xl text-center mb-12">
+        Nuestra Promesa de Amor
+    </h2>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {
+            photos.map((photo, index) => (
+                <div
+                    class={`overflow-hidden rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 aspect-square ${index % 3 === 0 ? "md:col-span-2 md:row-span-2" : ""}`}
+                >
+                    <img
+                        src={
+                            photo.startsWith("/")
+                                ? photo
+                                : `https://source.unsplash.com/random/800x800/?wedding,couple,love&sig=${index}`
+                        }
+                        alt="Foto de la pareja"
+                        class="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                    />
+                </div>
+            ))
+        }
+    </div>
+</section>
