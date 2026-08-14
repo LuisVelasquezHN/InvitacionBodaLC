@@ -393,7 +393,7 @@ if (!isAuthed) {
       else if(filter==="declined") list=list.filter(g=>g.confirmado&&g.cantidadConfirmada===0);
       if(catFilter!=="all") list=list.filter(g=>(g.categoria||"ambos")===catFilter);
 
-      $("#guest-count").textContent = list.length;
+      $("#guest-count").textContent = list.reduce((s,g)=>s+pases(g),0) + " personas";
       const catBadge = (c) => ({luis:'<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-600">Luis</span>',cesia:'<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-pink-50 text-pink-600">Cesia</span>',ambos:'<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-600">Ambos</span>'}[c]||'');
 
       if(list.length===0){ $("#guests-tbody").innerHTML=""; $("#guests-empty").classList.remove("hidden"); }
