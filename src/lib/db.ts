@@ -143,3 +143,20 @@ export async function deleteGuest(slug: string): Promise<{ success: boolean }> {
   await redis(["SREM", "guests:index", slug]);
   return { success: true };
 }
+
+export async function renameGuestSlug(oldSlug: string, newSlug: string): Promise<{ success: boolean; error?: string }> {
+  if (oldSlug === newSlug) return { success: true };
+  
+  const guest = await getGuest(oldSlug);
+  if (!guest) return { success: false, error: "Invitación no encontrada." };
+  
+  const existing = await getGuest(newSlug);
+  if (existing) return { success: false, error: "Ya existe una invitación con ese slug." };
+  
+  const updated = { ...guest, slug: newSlug };
+  await redis(["SET", `guest:${newSlug}`, JSON.stringify(updated)]);
+  await redis(["DEL", `guest:${oldSlug}`]);
+  await redis(["SREM", "guests:index", oldSlug]);
+  await redis(["SADD", "guests:index", newSlug]);
+  return { success: true };
+}

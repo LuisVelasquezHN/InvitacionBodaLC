@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { getAllGuests, updateGuest, createGuest, deleteGuest } from "../../../lib/db";
+import { getAllGuests, updateGuest, createGuest, deleteGuest, renameGuestSlug } from "../../../lib/db";
 import { verifyAdmin, unauthorizedResponse } from "../../../lib/auth";
 
 export const prerender = false;
@@ -72,7 +72,7 @@ export const PUT: APIRoute = async ({ request }) => {
 
   try {
     const body = await request.json();
-    const { slug, updates } = body;
+    const { slug, newSlug, updates } = body;
 
     if (!slug || !updates) {
       return new Response(
@@ -81,12 +81,31 @@ export const PUT: APIRoute = async ({ request }) => {
       );
     }
 
-    const result = await updateGuest(slug, updates);
-    if (!result.success) {
-      return new Response(
-        JSON.stringify({ error: result.error }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+    // Si se cambió el slug, renombrar primero
+    if (newSlug && newSlug !== slug) {
+      const renameResult = await renameGuestSlug(slug, newSlug.toLowerCase().replace(/[^a-z0-9-]/g, ""));
+      if (!renameResult.success) {
+        return new Response(
+          JSON.stringify({ error: renameResult.error }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+      }
+      // Actualizar con el nuevo slug
+      const result = await updateGuest(newSlug.toLowerCase().replace(/[^a-z0-9-]/g, ""), updates);
+      if (!result.success) {
+        return new Response(
+          JSON.stringify({ error: result.error }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+      }
+    } else {
+      const result = await updateGuest(slug, updates);
+      if (!result.success) {
+        return new Response(
+          JSON.stringify({ error: result.error }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+      }
     }
 
     return new Response(

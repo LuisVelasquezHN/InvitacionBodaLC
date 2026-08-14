@@ -472,7 +472,7 @@ if (!isAuthed) {
       if (p2) personas.push(p2);
 
       if (ed) {
-        await api("PUT", { slug: ed, updates: { personas, categoria: cat } });
+        await api("PUT", { slug: ed, newSlug: sl !== ed ? sl : undefined, updates: { personas, categoria: cat } });
         notify("Invitación actualizada", "success");
       } else {
         const r = await api("POST", { personas, slug: sl, categoria: cat });
