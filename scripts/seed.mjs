@@ -46,67 +46,73 @@ function generateSlug(name) {
 // categoria: quién los invita
 // ============================================================
 const invitaciones = [
-  // === AMBOS (novios/familia directa) ===
-  { personas: ["Luis Velásquez"], categoria: "ambos" },
-  { personas: ["Cesia Mejía"], categoria: "ambos" },
+  // ==============================
+  // LUIS (26 invitaciones - slots 1-26, faltan 14, 15 por definir)
+  // ==============================
+  { personas: ["Jessica", "Oscar"], categoria: "luis" },           // 1-2: pareja
+  { personas: ["Valeria"], categoria: "luis" },                     // 3
+  { personas: ["Eda"], categoria: "luis" },                         // 4
+  { personas: ["Martha"], categoria: "luis" },                      // 5
+  { personas: ["Martita"], categoria: "luis" },                     // 6
+  { personas: ["Claudia"], categoria: "luis" },                     // 7
+  { personas: ["Jacobo"], categoria: "luis" },                      // 8
+  { personas: ["Gabriela"], categoria: "luis" },                    // 9
+  { personas: ["Katherine"], categoria: "luis" },                   // 10
+  { personas: ["Hector"], categoria: "luis" },                      // 11
+  { personas: ["Luis Navarro", "Jennifer Garcia"], categoria: "luis" }, // 12-13: pareja
+  { personas: ["Gabriel"], categoria: "luis" },                     // 14
+  // 15: vacío (por definir)
+  { personas: ["Emerson"], categoria: "luis" },                     // 16
+  { personas: ["Osman"], categoria: "luis" },                       // 17
+  { personas: ["Doña Dalila"], categoria: "luis" },                 // 18
+  { personas: ["Daysi"], categoria: "luis" },                       // 19
+  { personas: ["Manuel"], categoria: "luis" },                      // 20
+  { personas: ["Juan Carballo"], categoria: "luis" },               // 21
+  { personas: ["Emerita"], categoria: "luis" },                     // 22
+  { personas: ["Javier"], categoria: "luis" },                      // 23
+  { personas: ["Kathia"], categoria: "luis" },                      // 24
+  { personas: ["Lizeth"], categoria: "luis" },                      // 25
+  { personas: ["Genesis"], categoria: "luis" },                     // 26
 
-  // === CESIA ===
-  { personas: ["Jesica Guerrero", "Oscar Bonilla"], categoria: "cesia" },
-  { personas: ["Wendy Bonilla"], categoria: "cesia" },
-  { personas: ["Jorge Mejía"], categoria: "cesia" },
-  { personas: ["Valeria Bonilla"], categoria: "cesia" },
-  { personas: ["Abuelo Rubén"], categoria: "cesia" },
-  { personas: ["Eda Elvir"], categoria: "cesia" },
-  { personas: ["Pamela"], categoria: "cesia" },
-  { personas: ["Claudia Bernardez"], categoria: "cesia" },
-  { personas: ["Valerie"], categoria: "cesia" },
-  { personas: ["Jacobo Bonilla"], categoria: "cesia" },
-  { personas: ["Gabriela"], categoria: "cesia" },
-  { personas: ["Gabriela Mendoza"], categoria: "cesia" },
-  { personas: ["Katherine Elvir"], categoria: "cesia" },
-  { personas: ["Gabriel Bonilla"], categoria: "cesia" },
-  { personas: ["Julissa"], categoria: "cesia" },
-  { personas: ["Magda"], categoria: "cesia" },
-  { personas: ["Lesly"], categoria: "cesia" },
-  { personas: ["Juan primo"], categoria: "cesia" },
-  { personas: ["Yesenia Munguia"], categoria: "cesia" },
-  { personas: ["Emerita Elvir"], categoria: "cesia" },
-  { personas: ["Kathia"], categoria: "cesia" },
-  { personas: ["Genesis"], categoria: "cesia" },
-  { personas: ["Sara"], categoria: "cesia" },
-  { personas: ["Sindy Proudinat"], categoria: "cesia" },
-  { personas: ["Josman Proudinat"], categoria: "cesia" },
+  // ==============================
+  // CESIA (26 invitaciones - slots 1-26)
+  // ==============================
+  { personas: ["Wendy"], categoria: "cesia" },                     // 1
+  { personas: ["Jorge"], categoria: "cesia" },                     // 2
+  { personas: ["Abuelo Rubén"], categoria: "cesia" },              // 3
+  { personas: ["Alexis"], categoria: "cesia" },                    // 4
+  { personas: ["Hilda"], categoria: "cesia" },                     // 5
+  { personas: ["Pamela"], categoria: "cesia" },                    // 6
+  { personas: ["Valerie"], categoria: "cesia" },                   // 7
+  { personas: ["Irene"], categoria: "cesia" },                     // 8
+  { personas: ["Gabby"], categoria: "cesia" },                     // 9
+  { personas: ["Norman"], categoria: "cesia" },                    // 10
+  { personas: ["Rigo"], categoria: "cesia" },                      // 11
+  { personas: ["Suyapa"], categoria: "cesia" },                    // 12
+  { personas: ["Javier C"], categoria: "cesia" },                  // 13
+  // 14-15: vacíos (por definir)
+  { personas: ["Rubén"], categoria: "cesia" },                     // 16
+  { personas: ["Lesly"], categoria: "cesia" },                     // 17
+  { personas: ["Juan primo"], categoria: "cesia" },                // 18
+  { personas: ["Norma"], categoria: "cesia" },                     // 19
+  { personas: ["Mario Cardona"], categoria: "cesia" },             // 20
+  { personas: ["Javiersito"], categoria: "cesia" },                // 21
+  { personas: ["Fabricio"], categoria: "cesia" },                  // 22
+  { personas: ["Andrea", "Esposo Andrea"], categoria: "cesia" },   // 23-24: pareja
+  { personas: ["Sara Bonilla"], categoria: "cesia" },              // 25
+  { personas: ["Nancy"], categoria: "cesia" },                     // 26
 
-  // === LUIS ===
-  { personas: ["Alexis"], categoria: "luis" },
-  { personas: ["Martha Osortho"], categoria: "luis" },
-  { personas: ["Hilda"], categoria: "luis" },
-  { personas: ["Martha Alvarez"], categoria: "luis" },
-  { personas: ["Irene"], categoria: "luis" },
-  { personas: ["Norman"], categoria: "luis" },
-  { personas: ["Hector Estrada"], categoria: "luis" },
-  { personas: ["Rigo"], categoria: "luis" },
-  { personas: ["Luis Navarro", "Jennifer Garcia"], categoria: "luis" },
-  { personas: ["Suyapa"], categoria: "luis" },
-  { personas: ["Javier"], categoria: "luis" },
-  { personas: ["Juan"], categoria: "luis" },
-  { personas: ["Emerson Banegas"], categoria: "luis" },
-  { personas: ["Rubén"], categoria: "luis" },
-  { personas: ["Osman"], categoria: "luis" },
-  { personas: ["Samuel Castejon"], categoria: "luis" },
-  { personas: ["Norma"], categoria: "luis" },
-  { personas: ["José Lagos"], categoria: "luis" },
-  { personas: ["Mario Cardona"], categoria: "luis" },
-  { personas: ["Juan Carballo"], categoria: "luis" },
-  { personas: ["Javiersito"], categoria: "luis" },
-  { personas: ["Fabricio"], categoria: "luis" },
-  { personas: ["Javier Pacheco"], categoria: "luis" },
-  { personas: ["Andrea", "Esposo Andrea"], categoria: "luis" },
-  { personas: ["Lizeth Pacheco", "Jorge Esposo Lizeth"], categoria: "luis" },
-  { personas: ["Tío Edgardo"], categoria: "luis" },
-  { personas: ["Tía Rumilda"], categoria: "luis" },
-  { personas: ["Fernando Lopez"], categoria: "luis" },
-  { personas: ["Daniel"], categoria: "luis" },
+  // ==============================
+  // COMPARTIDOS (27-34, invitados de ambos)
+  // ==============================
+  { personas: ["Yessenia", "Heberth"], categoria: "ambos" },       // 27: pareja
+  { personas: ["José", "Memo"], categoria: "ambos" },              // 28: pareja
+  { personas: ["Sindy", "Rebeca"], categoria: "ambos" },           // 29: pareja
+  { personas: ["Josman"], categoria: "ambos" },                    // 30
+  { personas: ["Edgardo"], categoria: "ambos" },                   // 31
+  { personas: ["+1 de Edgardo"], categoria: "ambos" },             // 32
+  { personas: ["Ecker primo"], categoria: "ambos" },               // 33
+  // 34: vacío (por definir)
 ];
 
 async function seed() {
