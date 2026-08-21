@@ -47,12 +47,15 @@ if (!guest || !guest.activo) {
           <!-- Cuerpo trasero -->
           <div class="env-back"></div>
 
-          <!-- Carta interior -->
+          <!-- Carta interior. Dos capas: una sube y la otra se inclina, cada
+               una con su propia curva, para que no haya escalones. -->
           <div class="env-letter" id="env-letter">
-            <div class="env-letter-inner">
-              <span class="env-letter-mono font-serif-elegant">C <i>&amp;</i> L</span>
-              <span class="env-letter-rule"></span>
-              <span class="env-letter-date">20 · 02 · 2027</span>
+            <div class="env-letter-card" id="env-letter-card">
+              <div class="env-letter-inner">
+                <span class="env-letter-mono font-serif-elegant">C <i>&amp;</i> L</span>
+                <span class="env-letter-rule"></span>
+                <span class="env-letter-date">20 · 02 · 2027</span>
+              </div>
             </div>
           </div>
 
@@ -68,10 +71,16 @@ if (!guest || !guest.activo) {
 
           <!-- Sello de lacre = botón de entrada -->
           <button id="enter-btn" class="env-seal" type="button" aria-label="Abrir invitación">
-            <span class="env-seal-halo"></span>
-            <span class="env-seal-halo env-seal-halo-2"></span>
+            <span class="env-seal-halo" aria-hidden="true"></span>
+            <span class="env-seal-halo env-seal-halo-2" aria-hidden="true"></span>
+            <span class="env-seal-burst" aria-hidden="true"></span>
+            <span class="env-seal-sparks" aria-hidden="true">
+              {[0, 45, 90, 135, 180, 225, 270, 315].map((a) => (<i style={`--a:${a}deg`}></i>))}
+            </span>
             <span class="env-seal-body">
-              <span class="env-seal-mono font-serif-elegant">C<i>&amp;</i>L</span>
+              <span class="env-seal-face">
+                <span class="env-seal-mono font-serif-elegant">C<i>&amp;</i>L</span>
+              </span>
             </span>
           </button>
 
@@ -574,9 +583,10 @@ if (!guest || !guest.activo) {
     const enterBtn = document.getElementById("enter-btn");
     const envelope = document.getElementById("envelope");
     const letter = document.getElementById("env-letter");
+    const card = document.getElementById("env-letter-card");
     const wash = document.getElementById("reveal-wash");
 
-    if (!splash || !content || !enterBtn || !envelope || !letter || !wash) return;
+    if (!splash || !content || !enterBtn || !envelope || !letter || !card || !wash) return;
 
     // Bloquear scroll mientras la portada está visible
     document.body.style.overflow = "hidden";
@@ -587,33 +597,40 @@ if (!guest || !guest.activo) {
     const at = (ms, fn) => timers.push(window.setTimeout(fn, ms));
 
     function revealContent() {
+      // La invitación empieza a fundirse por debajo de la portada mientras
+      // la carta todavía está saliendo: cuando el velo se disuelve ya está
+      // completamente presente y el relevo no se nota.
       content.classList.add("content-visible");
+      window.scrollTo(0, 0);
+      content.querySelectorAll("[data-animate]").forEach((el, i) => {
+        if (i < 4) setTimeout(() => el.classList.add("is-visible"), 150 + i * 160);
+      });
+    }
+
+    function releaseScroll() {
       document.body.style.overflow = "";
       window.scrollTo(0, 0);
-
-      setTimeout(() => {
-        content.querySelectorAll("[data-animate]").forEach((el, i) => {
-          if (i < 4) setTimeout(() => el.classList.add("is-visible"), i * 150);
-        });
-      }, 200);
     }
 
     function expandLetter() {
-      const r = letter.getBoundingClientRect();
+      const r = card.getBoundingClientRect();
       const top = Math.max(0, r.top);
       const left = Math.max(0, r.left);
       const right = Math.max(0, window.innerWidth - r.right);
       const bottom = Math.max(0, window.innerHeight - r.bottom);
 
+      // Los reflujos forzados no son decorativos: fijan el recorte inicial
+      // *sin* transición y sólo después la habilitan. Con requestAnimationFrame
+      // los dos pasos podían caer en el mismo fotograma y el velo acababa
+      // creciendo desde el centro de la pantalla en vez de desde la carta.
       wash.style.clipPath = `inset(${top}px ${right}px ${bottom}px ${left}px round 6px)`;
       wash.style.opacity = "1";
+      void wash.offsetWidth;
 
-      requestAnimationFrame(() => {
-        wash.classList.add("is-active");
-        requestAnimationFrame(() => {
-          wash.style.clipPath = "inset(0px 0px 0px 0px round 0px)";
-        });
-      });
+      wash.classList.add("is-active");
+      void wash.offsetWidth;
+
+      wash.style.clipPath = "inset(0px 0px 0px 0px round 0px)";
     }
 
     function openEnvelope() {
@@ -625,48 +642,60 @@ if (!guest || !guest.activo) {
       if (reduced) {
         splash.classList.add("splash-exit");
         revealContent();
+        releaseScroll();
         at(700, () => { splash.remove(); wash.remove(); });
         return;
       }
 
-      // Encadenamos por transitionend (con respaldo por tiempo) para que
-      // cada paso arranque cuando el anterior terminó de verdad, aunque el
-      // navegador haya pausado las animaciones (pestaña en segundo plano).
-      const then = (el, fallbackMs, fn) => {
+      // Los pasos se solapan a propósito: cada uno arranca cuando el
+      // anterior lleva ~dos tercios, así el conjunto se lee como un solo
+      // movimiento y no como una secuencia de pasos.
+
+      // 1 · el lacre se levanta  →  2 · la solapa se abre
+      at(520, () => envelope.classList.add("is-open"));
+
+      // 3 · la carta sale, y la invitación ya empieza a aparecer debajo
+      at(1450, () => {
+        envelope.classList.add("is-letter-out");
+        splash.classList.add("is-revealing");
+        revealContent();
+
+        // 4 · el velo toma el relevo antes de que la carta se detenga, así
+        //     el gesto no se corta en dos. Marcamos el instante con una
+        //     animación auxiliar en lugar de un temporizador: comparte el
+        //     reloj de las animaciones, de modo que si el navegador las
+        //     pausa (pestaña en segundo plano) el relevo espera con ellas y
+        //     la posición que medimos sigue siendo la real.
         let done = false;
         const run = () => {
           if (done) return;
           done = true;
-          el.removeEventListener("transitionend", onEnd);
-          fn();
-        };
-        const onEnd = (e) => { if (e.target === el && e.propertyName === "transform") run(); };
-        el.addEventListener("transitionend", onEnd);
-        at(fallbackMs, run);
-      };
-
-      const flap = envelope.querySelector(".env-flap");
-
-      // 1 · el lacre se rompe  →  2 · la solapa se abre
-      at(320, () => {
-        envelope.classList.add("is-open");
-        // 3 · la carta sale del sobre
-        then(flap, 1400, () => {
-          envelope.classList.add("is-letter-out");
-          // 4 · la carta se despliega hasta llenar la pantalla
-          then(letter, 1400, () => {
-            expandLetter();
-            // 5 · detrás del velo, la invitación ya está lista
-            at(750, () => { splash.classList.add("splash-exit"); revealContent(); });
-            // 6 · se disuelve el velo
-            at(950, () => wash.classList.add("is-fading"));
-            at(1800, () => { splash.remove(); wash.remove(); });
+          expandLetter();
+          // 5 · con el velo ya cubriendo la pantalla, la portada se apaga
+          //     debajo y el velo se disuelve sobre la invitación, que a
+          //     estas alturas lleva un segundo largo fundiéndose.
+          at(1200, () => {
+            splash.classList.add("splash-exit");
+            wash.classList.add("is-fading");
           });
-        });
+          at(1250, releaseScroll);
+          at(2700, () => { splash.remove(); wash.remove(); });
+        };
+
+        letter
+          .animate([{ opacity: 1 }, { opacity: 1 }], { duration: 1250 })
+          .finished.then(run)
+          .catch(() => {});
+        at(1900, run);
       });
     }
 
     enterBtn.addEventListener("click", openEnvelope);
+
+    // Tocar el sobre entero también abre: el sello es la invitación al gesto,
+    // no la única zona sensible.
+    const scene = splash.querySelector(".envelope-scene");
+    if (scene) scene.addEventListener("click", openEnvelope);
 
     // Limpieza en navegaciones de Astro
     document.addEventListener("astro:before-swap", () => timers.forEach(clearTimeout), { once: true });
@@ -809,6 +838,7 @@ if (!guest || !guest.activo) {
     margin: clamp(1.75rem, 6vw, 2.75rem) auto clamp(1.25rem, 4vw, 2rem);
     perspective: 1300px;
     perspective-origin: 50% 0%;
+    cursor: pointer;
   }
 
   @media (min-width: 768px) {
@@ -823,12 +853,13 @@ if (!guest || !guest.activo) {
     transform-style: preserve-3d;
     transform: rotateX(4deg);
     transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease;
-    animation: envelope-in 1.1s cubic-bezier(0.2, 0.8, 0.3, 1) 0.25s backwards;
+    animation: envelope-in 1.3s cubic-bezier(0.22, 0.85, 0.28, 1) 0.25s backwards;
   }
 
   @keyframes envelope-in {
-    from { opacity: 0; transform: rotateX(18deg) translateY(28px) scale(0.94); }
-    to   { opacity: 1; transform: rotateX(4deg) translateY(0) scale(1); }
+    0%   { opacity: 0; transform: rotateX(20deg) translateY(34px) scale(0.93); }
+    60%  { opacity: 1; }
+    100% { opacity: 1; transform: rotateX(4deg) translateY(0) scale(1); }
   }
 
   .envelope-shadow {
@@ -841,7 +872,7 @@ if (!guest || !guest.activo) {
     background: radial-gradient(ellipse at center, rgba(74, 93, 70, 0.22) 0%, transparent 70%);
     filter: blur(5px);
     animation: splash-fade-in 1s ease-out 0.6s backwards;
-    transition: opacity 0.6s ease, transform 0.8s ease;
+    transition: opacity 0.7s ease, transform 1s ease;
   }
 
   /* --- Cuerpo del sobre --- */
@@ -865,13 +896,19 @@ if (!guest || !guest.activo) {
     width: 88%;
     height: 86%;
     z-index: 2;
+    transform: translateY(0);
+    will-change: transform;
+  }
+
+  .env-letter-card {
+    position: absolute;
+    inset: 0;
     border-radius: 4px;
     background: linear-gradient(175deg, #ffffff 0%, #fdfbf6 100%);
     box-shadow:
-      0 -2px 14px rgba(74, 93, 70, 0.12),
+      0 14px 30px -18px rgba(74, 93, 70, 0.5),
       inset 0 0 0 1px rgba(191, 163, 124, 0.35);
-    transform: translateY(0);
-    transition: transform 1.05s cubic-bezier(0.45, 0, 0.15, 1);
+    will-change: transform;
   }
 
   .env-letter-inner {
@@ -922,10 +959,8 @@ if (!guest || !guest.activo) {
     clip-path: polygon(0 0, 100% 0, 50% 100%);
     background: linear-gradient(170deg, var(--paper) 0%, var(--paper-3) 100%);
     filter: drop-shadow(0 3px 4px rgba(74, 93, 70, 0.14));
-    transition:
-      transform 1.05s cubic-bezier(0.55, 0, 0.25, 1),
-      background 0.6s ease 0.35s,
-      z-index 0s linear 0.42s;
+    will-change: transform;
+    transition: background 0.9s ease 0.5s, filter 0.9s ease 0.5s;
     backface-visibility: visible;
   }
 
@@ -959,64 +994,92 @@ if (!guest || !guest.activo) {
     filter: drop-shadow(0 -2px 3px rgba(74, 93, 70, 0.10));
   }
 
+  /* Contorno del sobre recortado a la silueta del frente: si fuera un
+     rectángulo completo, su borde superior cruzaría la carta al salir. */
   .env-front::after {
     content: "";
     position: absolute;
     inset: 0;
     border-radius: 6px;
+    clip-path: polygon(0 0, 50% 50%, 100% 0, 100% 100%, 0 100%);
     box-shadow: inset 0 0 0 1px rgba(191, 163, 124, 0.30);
   }
 
   /* --- Sello de lacre (botón) --- */
   .env-seal {
+    --seal: clamp(72px, 21vw, 94px);
     position: absolute;
     top: 47%;
     left: 50%;
     z-index: 6;
-    width: clamp(66px, 20vw, 86px);
-    height: clamp(66px, 20vw, 86px);
+    display: grid;
+    place-items: center;
+    /* La caja táctil es bastante mayor que el lacre y NUNCA cambia de
+       tamaño: así el hover no la deforma ni provoca parpadeos. */
+    width: calc(var(--seal) + 44px);
+    height: calc(var(--seal) + 44px);
     transform: translate(-50%, -50%);
-    border: 0;
     padding: 0;
+    border: 0;
     background: none;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    animation: seal-appear 0.8s ease-out 1.1s backwards;
-    transition: transform 0.35s cubic-bezier(0.3, 1.5, 0.5, 1);
+    animation: seal-appear 0.9s ease-out 1.1s backwards;
   }
 
-  .env-seal:hover { transform: translate(-50%, -50%) scale(1.06); }
-  .env-seal:active { transform: translate(-50%, -50%) scale(0.94); }
+  .env-seal > * {
+    grid-area: 1 / 1;
+  }
+
+  @keyframes seal-appear {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* El cuerpo escala con la propiedad `scale`, independiente del
+     `transform` que usa la animación de respiración: nunca compiten. */
+  .env-seal-body {
+    position: relative;
+    width: var(--seal);
+    height: var(--seal);
+    scale: 1;
+    filter: drop-shadow(0 7px 10px rgba(59, 75, 56, 0.40));
+    transition: scale 0.45s cubic-bezier(0.34, 1.4, 0.64, 1);
+    animation: seal-breathe 3.4s ease-in-out 1.9s infinite;
+  }
+
+  .env-seal:hover .env-seal-body { scale: 1.07; }
+  .env-seal:active .env-seal-body { scale: 0.95; transition-duration: 0.12s; }
 
   .env-seal:focus-visible {
+    outline: none;
+  }
+
+  .env-seal:focus-visible .env-seal-body {
     outline: 2px solid var(--color-wedding-gold);
-    outline-offset: 6px;
+    outline-offset: 8px;
     border-radius: 50%;
   }
 
-  .env-seal-body {
+  .env-seal-face {
     position: absolute;
     inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    /* borde ligeramente irregular: cera, no botón */
     border-radius: 47% 53% 51% 49% / 52% 48% 53% 47%;
     background:
       radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.38) 0%, transparent 48%),
       radial-gradient(circle at 72% 82%, rgba(0, 0, 0, 0.22) 0%, transparent 55%),
       linear-gradient(145deg, #5f7459 0%, var(--color-wedding-dark-green) 45%, #38472f 100%);
     box-shadow:
-      0 8px 18px -5px rgba(59, 75, 56, 0.55),
-      0 2px 4px rgba(59, 75, 56, 0.25),
       inset 0 -3px 6px rgba(0, 0, 0, 0.30),
       inset 0 2px 4px rgba(255, 255, 255, 0.20);
-    animation: seal-breathe 3s ease-in-out 1.9s infinite;
     overflow: hidden;
   }
 
-  /* anillo grabado interior del sello */
-  .env-seal-body::before {
+  /* Anillo grabado */
+  .env-seal-face::before {
     content: "";
     position: absolute;
     inset: 13%;
@@ -1025,17 +1088,17 @@ if (!guest || !guest.activo) {
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
   }
 
-  /* Brillo que recorre el sello */
-  .env-seal-body::after {
+  /* Brillo que recorre la cera */
+  .env-seal-face::after {
     content: "";
     position: absolute;
     top: -60%;
     left: -120%;
-    width: 60%;
+    width: 55%;
     height: 220%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.32), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.30), transparent);
     transform: rotate(18deg);
-    animation: seal-shine 4.5s ease-in-out 2.4s infinite;
+    animation: seal-shine 5s ease-in-out 2.4s infinite;
   }
 
   .env-seal-mono {
@@ -1055,27 +1118,52 @@ if (!guest || !guest.activo) {
 
   /* Halos que laten alrededor del sello */
   .env-seal-halo {
-    position: absolute;
-    inset: 0;
+    width: var(--seal);
+    height: var(--seal);
     border-radius: 47% 53% 51% 49% / 52% 48% 53% 47%;
     border: 1px solid rgba(191, 163, 124, 0.55);
     opacity: 0;
     pointer-events: none;
-    animation: seal-halo 3.2s ease-out 2.2s infinite;
+    animation: seal-halo 3.4s ease-out 2.2s infinite;
   }
 
   .env-seal-halo-2 {
-    animation-delay: 3.4s;
+    animation-delay: 3.9s;
   }
 
-  @keyframes seal-appear {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  /* Destello dorado en el instante de la rotura */
+  .env-seal-burst {
+    width: calc(var(--seal) * 1.7);
+    height: calc(var(--seal) * 1.7);
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(245, 238, 224, 0.9) 0%, rgba(191, 163, 124, 0.32) 38%, transparent 70%);
+  }
+
+  /* Chispas de cera */
+  .env-seal-sparks {
+    position: relative;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+  }
+
+  .env-seal-sparks i {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 5px;
+    height: 5px;
+    margin: -2.5px 0 0 -2.5px;
+    border-radius: 50%;
+    background: var(--color-wedding-gold);
+    opacity: 0;
   }
 
   @keyframes seal-breathe {
     0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.045); }
+    50% { transform: scale(1.04); }
   }
 
   @keyframes seal-shine {
@@ -1084,9 +1172,9 @@ if (!guest || !guest.activo) {
   }
 
   @keyframes seal-halo {
-    0% { opacity: 0.75; transform: scale(1); }
-    70% { opacity: 0; transform: scale(1.9); }
-    100% { opacity: 0; transform: scale(1.9); }
+    0% { opacity: 0.7; transform: scale(1); }
+    70% { opacity: 0; transform: scale(1.95); }
+    100% { opacity: 0; transform: scale(1.95); }
   }
 
   /* --- Pie de portada --- */
@@ -1140,45 +1228,100 @@ if (!guest || !guest.activo) {
      APERTURA
      ============================================ */
 
-  /* 1 · el lacre se rompe y se desprende */
+  /* 1 · el lacre se hunde y se levanta, como si lo despegaran */
   #splash-cover.is-opening .env-seal {
     pointer-events: none;
-    animation: seal-break 0.75s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 
-  #splash-cover.is-opening .env-seal-body,
-  #splash-cover.is-opening .env-seal-body::after,
+  #splash-cover.is-opening .env-seal-body {
+    animation: seal-lift 1.3s cubic-bezier(0.32, 0, 0.18, 1) forwards;
+  }
+
+  #splash-cover.is-opening .env-seal-face::after,
   #splash-cover.is-opening .env-seal-halo {
     animation: none;
+    opacity: 0;
   }
 
-  @keyframes seal-break {
-    0%   { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
-    22%  { transform: translate(-50%, -50%) scale(0.88) rotate(-6deg); opacity: 1; }
-    100% { transform: translate(-50%, -95%) scale(1.35) rotate(14deg); opacity: 0; }
+  #splash-cover.is-opening .env-seal-burst {
+    animation: seal-burst 1.15s ease-out 0.12s forwards;
+  }
+
+  #splash-cover.is-opening .env-seal-sparks i {
+    animation: spark-fly 1.4s cubic-bezier(0.2, 0.6, 0.3, 1) 0.14s forwards;
+  }
+
+  @keyframes seal-lift {
+    0%   { transform: scale(1) translateY(0) rotate(0deg); opacity: 1; }
+    20%  { transform: scale(0.93) translateY(0) rotate(0deg); opacity: 1; }
+    48%  { transform: scale(1.03) translateY(-8%) rotate(-3deg); opacity: 0.95; }
+    100% { transform: scale(1.16) translateY(-46%) rotate(-9deg); opacity: 0; }
+  }
+
+  @keyframes seal-burst {
+    0% { opacity: 0; transform: scale(0.35); }
+    25% { opacity: 0.7; }
+    100% { opacity: 0; transform: scale(1.5); }
+  }
+
+  @keyframes spark-fly {
+    0% { opacity: 0; transform: rotate(var(--a)) translateY(0) scale(0.4); }
+    22% { opacity: 0.85; }
+    100% { opacity: 0; transform: rotate(var(--a)) translateY(-46px) scale(0.2); }
   }
 
   /* 2 · la solapa se abre hacia atrás */
   .envelope.is-open .env-flap {
-    transform: rotateX(180deg);
-    z-index: 1;
-    background: linear-gradient(170deg, var(--lining) 0%, #dfe5db 100%);
-    filter: drop-shadow(0 -4px 6px rgba(74, 93, 70, 0.10));
+    animation: flap-open 1.5s cubic-bezier(0.42, 0.02, 0.22, 1) forwards;
+    background: linear-gradient(170deg, var(--lining) 0%, #dce3d7 100%);
+    filter: drop-shadow(0 -5px 8px rgba(74, 93, 70, 0.12));
   }
 
-  /* 3 · la carta sale del sobre */
+  /* El desplazamiento en Z entra sólo en el último tramo, cuando la solapa
+     ya está por encima del borde del sobre. Interpolado desde el principio
+     la metía detrás del sobre a mitad del giro: desaparecía y reaparecía
+     arriba, ya levantada. Y por eso mismo tampoco cambia de z-index a
+     mitad de camino. */
+  @keyframes flap-open {
+    0%   { transform: translateZ(0px) rotateX(0deg); }
+    72%  { transform: translateZ(0px) rotateX(142deg); }
+    100% { transform: translateZ(-14px) rotateX(181deg); }
+  }
+
+  /* 3 · la carta sale del sobre. Un único movimiento del sobre, sin
+     encadenar transformaciones que se corten entre sí. */
   .envelope.is-letter-out {
-    transform: rotateX(0deg) translateY(6%);
+    transform: rotateX(1.5deg) translateY(4%);
+    transition: transform 1.7s cubic-bezier(0.33, 0, 0.2, 1);
   }
 
+  /* La subida es un único tramo continuo. La curva no muere en cero: llega
+     al final con algo de velocidad, para que el velo tome el relevo del
+     movimiento en lugar de arrancar desde parado. */
   .envelope.is-letter-out .env-letter {
-    transform: translateY(-80%) scale(1.02);
-    box-shadow:
-      0 22px 40px -18px rgba(74, 93, 70, 0.45),
-      inset 0 0 0 1px rgba(191, 163, 124, 0.35);
+    animation: letter-out 1.45s cubic-bezier(0.42, 0, 0.35, 1) forwards;
   }
 
-  /* 4 · texto de portada se desvanece */
+  @keyframes letter-out {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-80%); }
+  }
+
+  /* La inclinación va en su propia capa y con su propia curva, así se
+     mezcla con la subida en vez de interrumpirla. */
+  .envelope.is-letter-out .env-letter-card {
+    animation: letter-tilt 1.45s ease-in-out forwards;
+  }
+
+  @keyframes letter-tilt {
+    0%   { transform: rotate(0deg); }
+    35%  { transform: rotate(0.7deg); }
+    75%  { transform: rotate(-0.5deg); }
+    100% { transform: rotate(0deg); }
+  }
+
+  /* 4 · el texto de portada se retira y el fondo se aclara hacia el
+     blanco de la invitación, para que el relevo no sea un corte seco */
   #splash-cover.is-opening .cover-footer,
   #splash-cover.is-opening .cover-eyebrow {
     opacity: 0;
@@ -1186,14 +1329,23 @@ if (!guest || !guest.activo) {
   }
 
   #splash-cover.is-opening .envelope-shadow {
-    opacity: 0;
+    opacity: 0.4;
+    transform: translateX(-50%) scaleX(1.15);
+  }
+
+  #splash-cover.is-revealing {
+    background: linear-gradient(180deg, #fdfcf9 0%, #ffffff 100%);
+    transition: background 1.4s ease;
   }
 
   /* 5 · salida del splash */
+  /* La portada se apaga de golpe, pero sólo cuando el velo ya cubre toda
+     la pantalla: si se fundiera a la vez que él, el sobre se vería como un
+     fantasma por encima de la invitación. */
   #splash-cover.splash-exit {
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.6s ease;
+    transition: none;
   }
 
   /* 6 · la carta se despliega hasta llenar la pantalla */
@@ -1204,15 +1356,26 @@ if (!guest || !guest.activo) {
     opacity: 0;
     pointer-events: none;
     background: linear-gradient(175deg, #ffffff 0%, #fdfbf6 100%);
+    box-shadow: inset 0 0 0 1px rgba(191, 163, 124, 0.35);
     clip-path: inset(50% 50% 50% 50% round 12px);
+    transform: scale(1);
+    transform-origin: center;
+    will-change: clip-path, opacity, transform;
   }
 
   #reveal-wash.is-active {
-    transition: clip-path 0.85s cubic-bezier(0.65, 0, 0.2, 1);
+    transition: clip-path 1.2s cubic-bezier(0.22, 0.62, 0.25, 1);
   }
 
+  /* Al disolverse sigue abriéndose un poco hacia el espectador. Quieto en
+     blanco, ese segundo se sentía como una pausa muerta: no se movía nada
+     mientras bajaba la opacidad. */
   #reveal-wash.is-fading {
-    transition: clip-path 0.85s cubic-bezier(0.65, 0, 0.2, 1), opacity 0.75s ease;
+    transition:
+      clip-path 1.2s cubic-bezier(0.22, 0.62, 0.25, 1),
+      opacity 1.1s ease,
+      transform 1.4s cubic-bezier(0.22, 0.6, 0.3, 1);
+    transform: scale(1.05);
     opacity: 0 !important;
   }
 
@@ -1223,8 +1386,11 @@ if (!guest || !guest.activo) {
     .env-flap,
     .env-seal,
     .env-seal-body,
-    .env-seal-body::after,
+    .env-seal-face,
+    .env-seal-face::after,
     .env-seal-halo,
+    .env-seal-burst,
+    .env-seal-sparks i,
     .cover-hint,
     .splash-content,
     .cover-footer,
@@ -1282,14 +1448,14 @@ if (!guest || !guest.activo) {
   /* Content entrance */
   #invitation-content {
     opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), 
-                transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(30px) scale(1.02);
+    transition: opacity 2.4s cubic-bezier(0.33, 0, 0.2, 1),
+                transform 2.8s cubic-bezier(0.33, 0, 0.2, 1);
   }
 
   #invitation-content.content-visible {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 
   /* Decorative elements between sections */
